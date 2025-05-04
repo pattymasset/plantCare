@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_ui_list parent="" relationship="" sys_domain="global" table="x_882786_plantcare_request" version="2" view="">
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>number</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>0</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>64e36e3fc3442210c0a0f22ed4013111</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>priority</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>1</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>2ce36e3fc3442210c0a0f22ed4013111</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>state</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>2</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>ace36e3fc3442210c0a0f22ed4013111</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>assigned_to</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>3</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>20e36e3fc3442210c0a0f22ed4013112</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>short_description</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>4</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>a0e36e3fc3442210c0a0f22ed4013112</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list_element action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element>sys_class_name</element>
+            <list_id display_value="x_882786_plantcare_request" element="NULL" name="x_882786_plantcare_request" parent="NULL" relationship="NULL" sys_domain="global" view="Default view">20e36e3fc3442210c0a0f22ed4013103</list_id>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <position>5</position>
+            <sum>false</sum>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_id>24e36e3fc3442210c0a0f22ed4013112</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+        </sys_ui_list_element>
+        <sys_ui_list action="INSERT_OR_UPDATE">
+            <average_value>false</average_value>
+            <element/>
+            <max_value>false</max_value>
+            <min_value>false</min_value>
+            <name>x_882786_plantcare_request</name>
+            <parent/>
+            <position/>
+            <relationship/>
+            <sum>false</sum>
+            <sys_class_name>sys_ui_list</sys_class_name>
+            <sys_created_by>pmasset</sys_created_by>
+            <sys_created_on>2025-03-10 00:23:13</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>20e36e3fc3442210c0a0f22ed4013103</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>x_882786_plantcare_request</sys_name>
+            <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+            <sys_update_name>sys_ui_list_x_882786_plantcare_request_null</sys_update_name>
+            <sys_updated_by>pmasset</sys_updated_by>
+            <sys_updated_on>2025-03-10 00:23:13</sys_updated_on>
+            <sys_user/>
+            <view display_value="Default view" name="NULL">Default view</view>
+            <view_name/>
+        </sys_ui_list>
+    </sys_ui_list>
+</record_update>

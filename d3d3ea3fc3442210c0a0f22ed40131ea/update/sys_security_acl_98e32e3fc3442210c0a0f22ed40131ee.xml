@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl">
+    <sys_security_acl action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <admin_overrides>true</admin_overrides>
+        <advanced>false</advanced>
+        <applies_to/>
+        <condition/>
+        <controlled_by_refs/>
+        <decision_type>allow</decision_type>
+        <description/>
+        <local_or_existing>Local</local_or_existing>
+        <name>x_882786_plantcare_request</name>
+        <operation display_value="report_view">0997ab83733303005978e4b9cdf6a7b9</operation>
+        <script/>
+        <security_attribute/>
+        <sys_class_name>sys_security_acl</sys_class_name>
+        <sys_created_by>pmasset</sys_created_by>
+        <sys_created_on>2025-03-10 00:23:12</sys_created_on>
+        <sys_id>98e32e3fc3442210c0a0f22ed40131ee</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_882786_plantcare_request</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_security_acl_98e32e3fc3442210c0a0f22ed40131ee</sys_update_name>
+        <sys_updated_by>pmasset</sys_updated_by>
+        <sys_updated_on>2025-03-10 00:23:12</sys_updated_on>
+        <type display_value="record">record</type>
+    </sys_security_acl>
+</record_update>
