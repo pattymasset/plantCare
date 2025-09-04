@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>mainMergeUserAccounts</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[//Merge Accounts
+
+
+/*
+    var gu;
+    var bu;
+    for (var i = 0; i < userCompare.length; i++) {
+        var lm = userCompare[i];
+       
+        //var gu = lm.goodUser;
+        //var bu = lm.badUser;
+        if(lm.hasOwnProperty('goodUser')){
+            gu = lm.sys_id;
+        }
+        if(lm.hasOwnProperty('badUser')){
+            bu = lm.sys_id;
+        }
+        //gs.info(JSON.stringify(lm, null, 2));
+    }
+    var findUserReferences = findDictionaryReferences(gu, bu);
+
+        //gs.info(gu);
+ 
+    return findUserReferences;
+}
+*/
+ 
+var allUsers = [];
+
+
+
+for (var i = 0; i < allUsers.length; i++) {
+
+    var tableList = findDictionaryReferences();
+
+    var ua = allUsers[i];
+
+    var goodUser = allUsers.gu;
+    var badUser = allUsers.bu;
+
+
+
+    var findUser =  new GlideRecord(tableName);
+    findUser.addQuery(fieldName, badUser);
+    findUser.query();
+
+    while (findUser.next()) {
+
+        gs.info("table: " + tableName + "record: " + findUser.sys_id);
+
+        var userReferences = findDictionaryReferences(gu, bu);
+        gs.info
+
+    }
+
+
+
+}
+
+var snFieldList = findDictionaryReferences();
+
+function userCheck (gu, bu, snFieldList) {
+
+    var fieldList = snFieldList[i];
+    var tblName = fieldList.name;
+    var fldName = fieldList.element;
+
+    var badUser = bu.sys_id;
+    var goodUser = gu.sys_id;
+
+    for (var i = 0; i < snFieldList.length; i++) {
+        var findBU = new GlideRecord(tblName);
+        findBU.addQuery(fldName, badUser);
+        findBU.addQuery('active', true);
+        findBU.query();
+
+        while (findBU.next()){
+            findBU.setValue(fldName, goodUser);
+            findBU.setWorkflow(false);
+            findBU.autoSysFields(false);
+            findBU.update();
+        }
+    }
+}
+
+function findDictionaryReferences() {
+    var snTables = ["incident", "change_request", "change_task", "sc_req_item", "sc_request", "sc_task", "sysapproval_approver"];
+    //var snTables = ["incident"];
+   
+   
+    var userRefArr = [];
+    //Query dictionary table for Task and CMDB Tables
+    var dict = new GlideRecord('sys_dictionary');
+    //dict.addQuery('name', 'IN', snTables);
+    //dev SysID for User table
+    //dict.addEncodedQuery('reference=sys_user^nameIN'+snTables);  //sys_idIN28dd2c721bef8ad0c73ceca5604bcb32
+    dict.addQuery('reference', 'sys_user');
+    dict.addQuery('name', 'IN', snTables);
+    //dict.addQuery('name', 'DOESNOTCONTAIN', 'x_g_dh5');
+    //dict.addQuery('name', 'DOESNOTCONTAIN', 'u_');
+    //dict.addQuery();
+    dict.setLimit(50);
+    dict.query();
+    while (dict.next()) {
+ 
+        var tblName = dict.getValue('name');
+        var fldName = dict.getValue('element');
+ 
+        userRefArr.push({"table": tblName, "element": fldName});
+       
+        //gr.setAutoSys(false);
+        //gr.setWorkflow(false);
+ 
+    }
+ 
+    return userRefArr;
+}
+function userReferences(elements){
+    for(var i=0; i < elements.length; i++){
+        var lm = elements[i]
+        var findUser =  new GlideRecord(lm.table);
+        findUser.addQuery(lm.element, '289e7488db1132402ab97e560f9619ef');  //bu  Kaufman
+ 
+        findUser.query();
+        while (findUser.next()) {
+            //if(lm.element === 'caller_id'){
+                //gs.info("User: " + findUser.getDisplayValue("caller_id") + " record: " + findUser.sys_id+ " table: " + lm.table+ " element: " + lm.element);
+                //if(findUser.getValue('caller_id') === '289e7488db1132402ab97e560f9619ef'){  //Bad user
+                    findUser.autoSysFields(false);
+                    findUser.setWorkflow(false);
+                    findUser.setValue(lm.element, '28dd2c721bef8ad0c73ceca5604bcb32'); //Good user  Raynor
+                    findUser.update();
+                //}
+            //}
+        }
+    }
+}
+ 
+var dicRef = findDictionaryReferences();
+gs.info(JSON.stringify(dicRef, null, 2));
+var userRef = userReferences(dicRef);]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:18:47</sys_created_on>
+        <sys_id>dabdb531c3b5a610c0a0f22ed4013151</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>mainMergeUserAccounts</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_dabdb531c3b5a610c0a0f22ed4013151</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:18:47</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

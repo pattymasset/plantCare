@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function delegates ($scope, spUtil) {
+    /* widget controller */
+    var c = this;
+
+    c.approvals = false;
+    c.assignments = false;
+    c.notifications = false;
+    c.meeting = false;
+
+    $scope.user = {
+        displayValue: $scope.data.user_dv,
+        value: $scope.data.uservalue,
+        name: 'user'
+    };
+    $scope.fromdate = {
+        displayValue: '',
+        value: '',
+        name: 'fromdate'
+    };
+    $scope.todate = {
+        displayValue: '',
+        value: '',
+        name: 'todate'
+    };
+
+
+    c.refresh = function() {
+        window.location.reload();
+    }
+
+    c.changed = function() {
+        c.data.value = $scope.user.value;
+        c.data.displayValue = $scope.user.displayValue;
+        c.data.delegatevalue = c.delegate.value;
+        c.data.delegatedisplayValue = c.delegate.displayValue;
+        c.data.from = c.from;
+        c.data.to = c.to;
+        c.data.approvals = c.approvals;
+        c.data.assignments = c.assignments;
+        c.data.notifications = c.notifications;
+        c.data.meeting = c.meeting;
+        c.server.update().then(function() {
+            if (c.data.verified == true) {
+                document.getElementById('create_div').style.display = 'none';
+                document.getElementById('created_div').style.display = 'block';
+
+            }
+        })
+
+    }
+
+    c.uiAction = function(action, value) {
+        c.data.action = action;
+        c.data.value_remove = value;
+        c.server.update().then(function() {
+            c.data.action = undefined;
+            window.location.reload();
+        })
+
+    }
+
+
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.input{&#13;
+  display: block;&#13;
+  margin-top: 10px;&#13;
+  margin-right: auto;&#13;
+  margin-left: auto;&#13;
+  margin-bottom: 10px; &#13;
+}&#13;
+&#13;
+.striped {&#13;
+    color: lighten($brand-info, 60%);&#13;
+    background-color: $brand-info;&#13;
+}&#13;
+&#13;
+.modal{&#13;
+  color: #000000;&#13;
+}&#13;
+&#13;
+&#13;
+i {&#13;
+ text-align: left; &#13;
+}&#13;
+&#13;
+&#13;
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>sp_delegate</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {
+  
+}]]></link>
+        <name>Delegate</name>
+        <option_schema>[{"name":"show_approvals","section":"Presentation","default_value":"true","label":"Show Approvals","type":"boolean"},{"name":"show_assignments","section":"Presentation","default_value":"true","label":"Show Assignments","type":"boolean"},{"name":"show_cc_notifications","section":"Presentation","default_value":"true","label":"Show CC notifications","type":"boolean"},{"name":"show_meeting_invitations","section":"Presentation","default_value":"true","label":"Show Meeting invitations","type":"boolean"},{"name":"show_do_delegation_to_me","section":"Presentation","default_value":"false","label":"Show option for removing of delegation to me","type":"boolean"}]</option_schema>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	
+	data.user_dv = gs.getUser().getDisplayName();
+	data.uservalue = gs.getUserID();
+	data.user_readonly = true;
+	data.inserted = false;
+	var action = input.action;
+	data.verified = false;
+	
+	
+	// Check if delegation is valid
+	if (input && !action ){
+
+		var from = new GlideDateTime();
+		var to = new GlideDateTime();
+		from.setDisplayValue(input.from);
+		to.setDisplayValue(input.to);
+
+		if(!input.delegatevalue){
+			gs.addErrorMessage("Please add delegate");
+		} else if(!input.from || !input.to){
+			gs.addErrorMessage("Please set dates");
+		} else if(input.value == input.delegatevalue){
+			gs.addErrorMessage("User and Delegate cant be the same");	
+		} else if (gs.dateDiff(from, to, true) < 0) {
+			gs.addErrorMessage("Please set to date to after from date.");
+		} else if (!input.approvals &&	!input.assignments && !input.notifications && !input.meeting) {
+			gs.addErrorMessage("Please select at least one thing to delegate.");
+		} else {
+			data.verified = true;
+		}
+
+	}
+	 // Create Delegate
+	if(input && !action && data.verified == true){
+		
+		var gr = new GlideRecord('sys_user_delegate');
+		gr.initialize(); 
+		gr.user = input.value; 
+		gr.delegate = input.delegatevalue; 
+		gr.starts = input.from;
+		gr.ends = input.to;
+		gr.approvals = input.approvals;
+		gr.assignments = input.assignments;
+		gr.invitations = input.meeting;
+		gr.notifications = input.notifications;
+		gr.insert();
+		
+		input = '';
+		data.inserted = true;
+	
+	}
+	
+	// Get current delegates
+	
+	data.current_delegates = [];
+	
+	var current_dr = new GlideRecord('sys_user_delegate');
+	current_dr.addQuery('user',data.uservalue);
+	current_dr.addQuery('delegate','!=',data.uservalue);
+	current_dr.orderByDesc('ends');
+	current_dr.query();
+	
+	while(current_dr.next()){
+		var obj = {};
+    obj.delegate = current_dr.delegate.getDisplayValue();
+    obj.sys_id = current_dr.sys_id.getValue();
+		obj.starts = current_dr.starts.getDisplayValue();
+		obj.ends = current_dr.ends.getDisplayValue();
+		
+		obj.approvals = current_dr.approvals.getValue();
+		obj.assignments = current_dr.assignments.getValue();
+		obj.invitations = current_dr.invitations.getValue();
+		obj.notifications = current_dr.notifications.getValue();
+		
+		data.current_delegates.push(obj);
+	}
+	
+	data.current_delegates_tome = [];
+	
+	var current_dr_tm = new GlideRecord('sys_user_delegate');
+	current_dr_tm.addQuery('delegate',data.uservalue);
+	current_dr_tm.addQuery('user','!=',data.uservalue);
+	current_dr_tm.orderByDesc('ends');
+	current_dr_tm.query();
+	
+	while(current_dr_tm.next()){
+		var obj_tm = {};
+    obj_tm.delegate = current_dr_tm.user.getDisplayValue();
+    obj_tm.sys_id = current_dr_tm.sys_id.getValue();
+		obj_tm.starts = current_dr_tm.starts.getDisplayValue();
+		obj_tm.ends = current_dr_tm.ends.getDisplayValue();
+		
+		obj_tm.approvals = current_dr_tm.approvals.getValue();
+		obj_tm.assignments = current_dr_tm.assignments.getValue();
+		obj_tm.invitations = current_dr_tm.invitations.getValue();
+		obj_tm.notifications = current_dr_tm.notifications.getValue();
+		
+		data.current_delegates_tome.push(obj_tm);
+	}
+	
+	
+	// Remove singel record
+    if (action == 'remove' && input) {
+        var dr = new GlideRecord('sys_user_delegate');
+        dr.addQuery('sys_id', input.value_remove);
+        dr.deleteMultiple();
+    }
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-09 23:09:02</sys_created_on>
+        <sys_id>a729d82fc39d2a10c0a0f22ed40131c6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Delegate</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sp_widget_a729d82fc39d2a10c0a0f22ed40131c6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-09 23:09:02</sys_updated_on>
+        <template><![CDATA[<div class="panel b">
+    <div class="panel-heading bg-primary">
+        <span> ${Delegate}</span>
+    </div>
+    <div class="container-fluid" id="delegate">
+        <div class="row">
+            <div class="col-sm-6 col-md-7 col-lg-7" id="created_div" style="display: none; text-align:center;">
+                <div class="container-fluid" class="col-sm-12 col-md-12 col-lg-12">
+                    <div class="row">
+                        <h3>
+                            Delegation created
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <i class="fa fa-arrows" style="font-size:80px"></i>
+                    </div>
+                    <div class="row">
+                        <input class="input" type="submit" value="Reset form" ng-click="c.refresh()">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-7 col-lg-7" id="create_div">
+                <form>
+                    <span>User:</span>
+                    <sn-record-picker id="user" mandatory="true" field="user" table="'sys_user'" default-query="'active=true'" sn-disabled="c.data.user_readonly" display-field="'name'" value-field="'sys_id'" search-fields="'name'" page-size="100"></sn-record-picker>
+                    <span>Delegate:</span>
+                    <sn-record-picker id="delegate" field="c.delegate" table="'sys_user'" default-query="'active=true'" display-field="'name'" value-field="'sys_id'" search-fields="'name'" page-size="100"></sn-record-picker>
+                    <span>From date:</span>
+                    <sp-date-picker field="fromdate" ng-model="c.from" ng-model-options="{getterSetter: true}" sn-include-time="true" sn-disabled="false"></sp-date-picker>
+                    <span>To date:</span>
+                    <sp-date-picker field="todate" ng-model="c.to" ng-model-options="{getterSetter: true}" sn-include-time="true" sn-disabled="false"></sp-date-picker>
+
+                    <label class="checkbox-inline" ng-if="::(options.show_approvals == 'true')">
+                      <input type="checkbox" ng-model="c.approvals">Approvals
+                  </label>
+                    <label class="checkbox-inline" ng-if="::(options.show_assignments == 'true')">
+                    <input type="checkbox" ng-model="c.assignments">Assignments
+                  </label>
+                    <label class="checkbox-inline" ng-if="::(options.show_cc_notifications == 'true')">
+                      <input type="checkbox" ng-model="c.notifications">CC notifications
+                  </label>
+                    <label class="checkbox-inline" ng-if="::(options.show_meeting_invitations == 'true')">
+                      <input type="checkbox" ng-model="c.meeting">Meeting invitations
+                  </label>
+                    <input class=input type="submit" value="Submit" ng-click="c.changed()">
+                </form>
+            </div>
+
+            <div class="col-sm-6 col-md-5 col-lg-5">
+                <div class="panel b" style="margin-top: 20px;">
+                    <div class="panel-heading bg-primary">
+                        <span> ${My delegates}</span>
+                    </div>
+                    <div class="container-fluid">
+
+                        <div ng-repeat="obj in c.data.current_delegates" class="row" ng-class-odd="'striped'">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+                                {{obj.delegate}}
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                {{obj.ends}}
+                            </div>
+                            <div class="col-sm-2 col-md-2 col-lg-2" align="right">
+                                <a ng-click="c.uiAction('remove',obj.sys_id)" ><i class="fa fa-trash hand" aria-hidden="true"></i></a>
+                                <a data-toggle="modal" data-target="#{{obj.sys_id}}"><i class="fa fa-info hand" aria-hidden="true"></i></a>
+                            </div>
+
+                            <div id={{obj.sys_id}} class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;  </button>
+                                            <h4 class="modal-title" id="myModalLabel">Delegated to {{obj.delegate}}</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-12 col-lg-12">
+
+                                                        <p>
+                                                            Start Time: {{obj.starts}}
+                                                        </p>
+                                                        <p>
+                                                            Stop Time: {{obj.ends}}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="text-align:center;">
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Approvals
+                                                        <p>
+                                                            <i ng-if="obj.approvals == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.approvals == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Assignments
+                                                        <p>
+                                                            <i ng-if="obj.assignments == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.assignments == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Meetings
+                                                        <p>
+
+                                                            <i ng-if="obj.invitations == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.invitations == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Notifications
+                                                        <p>
+                                                            <i ng-if="obj.notifications == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.notifications == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-primary" ng-click="c.uiAction('remove',obj.sys_id)">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+
+                        </div>
+                        <div ng-hide="c.data.current_delegates.length">
+                            No delegations
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel b">
+                    <div class="panel-heading bg-primary">
+                        <span> ${Delegated to me}</span>
+                    </div>
+                    <div class="container-fluid">
+
+
+                        <div ng-repeat="obj in c.data.current_delegates_tome" class="row" ng-class-odd="'striped'">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+                                {{obj.delegate}}
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                {{obj.ends}}
+                            </div>
+                            <div class="col-sm-2 col-md-2 col-lg-2" align="right">
+                                <a ng-click="c.uiAction('remove',obj.sys_id)" ng-if="::(options.show_do_delegation_to_me == 'true')"><i class="fa fa-trash hand" aria-hidden="true"></i></a>
+                                <a data-toggle="modal" data-target="#{{obj.sys_id}}"><i class="fa fa-info hand" aria-hidden="true"></i></a>
+                            </div>
+                            <div id={{obj.sys_id}} class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;  </button>
+                                            <h4 class="modal-title" id="myModalLabel">{{obj.delegate}} has delegated to you</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-12 col-lg-12">
+
+                                                        <p>
+                                                            Start Time: {{obj.starts}}
+                                                        </p>
+                                                        <p>
+                                                            Stop Time: {{obj.ends}}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="text-align:center;">
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Approvals
+                                                        <p>
+                                                            <i ng-if="obj.approvals == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.approvals == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Assignments
+                                                        <p>
+                                                            <i ng-if="obj.assignments == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.assignments == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Meetings
+                                                        <p>
+
+                                                            <i ng-if="obj.invitations == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.invitations == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-sm-3 col-md-3 col-lg-3">
+                                                        Notifications
+                                                        <p>
+                                                            <i ng-if="obj.notifications == 1" class="fa fa-check-square-o" aria-hidden="true"></i>
+                                                            <i ng-if="obj.notifications == 0" class="fa fa-square-o" aria-hidden="true"></i>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-primary" ng-click="c.uiAction('remove',obj.sys_id)" ng-if="::(options.show_do_delegation_to_me == 'true')">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-hide="c.data.current_delegates_tome.length">
+                            No delegations
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>]]></template>
+    </sp_widget>
+</record_update>

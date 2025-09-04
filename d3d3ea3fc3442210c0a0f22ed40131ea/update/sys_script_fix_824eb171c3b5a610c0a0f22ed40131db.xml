@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>smartyParse</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[var json = {
+    "input_index":0,
+    "candidate_index":0,
+    "delivery_line_1":"5710 W Chandler Blvd",
+    "last_line":"Chandler AZ 85226-3682",
+    "delivery_point_barcode":"852263682990",
+    "components":{
+       "primary_number":"5710",
+       "street_predirection":"W",
+       "street_name":"Chandler",
+       "street_suffix":"Blvd",
+       "city_name":"Chandler",
+       "default_city_name":"Chandler",
+       "state_abbreviation":"AZ",
+       "zipcode":"85226",
+       "plus4_code":"3682",
+       "delivery_point":"99",
+       "delivery_point_check_digit":"0"
+    },
+    "metadata":{
+       "record_type":"H",
+       "zip_type":"Standard",
+       "county_fips":"04013",
+       "county_name":"Maricopa",
+       "carrier_route":"R094",
+       "congressional_district":"04",
+       "building_default_indicator":"Y",
+       "rdi":"Commercial",
+       "elot_sequence":"0024",
+       "elot_sort":"A",
+       "latitude":33.30547,
+       "longitude":-111.94029,
+       "precision":"Zip9",
+       "time_zone":"Mountain",
+       "utc_offset":-7
+    },
+    "analysis":{
+       "dpv_match_code":"D",
+       "dpv_footnotes":"AAN1",
+       "dpv_cmra":"N",
+       "dpv_vacant":"N",
+       "dpv_no_stat":"Y",
+       "active":"Y",
+       "footnotes":"H#N#"
+    }
+ };
+ 
+ var street, city, state, zip, lat, longitude, u_county;
+ 
+ //Initial For Loop - For each key, parse
+ for (var key in json) {
+ 
+ /* Commenting out variables list
+ if(typeof json[key] != "object"){
+ gs.info("Key: " + key+" -- "+json[key]);
+ //gs.info("---------------------------");
+ } */ 
+ 
+ //Parse Street
+ if(key == "delivery_line_1") {
+ switch (key) {
+ case "delivery_line_1":
+ street = json[key];
+ break;
+ }
+ }
+ 
+ //Parsing "components" array
+ for (var key2 in json[key]) {
+ //gs.info("Key2: " + key2+" -- "+json.components[key2]);
+ 
+ //Parsing 'zipcode' as zip
+ if(!gs.nil(json.components[key2] && json.components[key2] == "zipcode")){
+ switch(key2){
+    case "zipcode":
+    zip = json.components[key2];
+    break;
+ }
+ }
+ 
+ //Parse 'city_name' as City
+ if(!gs.nil(json.components[key2] && json.components[key2] == "city_name")){
+ switch(key2){
+    case "city_name":
+    city = json.components[key2];
+    break;
+   }
+ }
+ 
+ //Parse 'state_abbreviation' as State
+ if(!gs.nil(json.components[key2] && json.components[key2] == "state_abbreviation")){
+ switch(key2){
+    case "state_abbreviation":
+    state = json.components[key2];
+    break;
+   }
+ }
+ 
+ //End of components for loop
+ }
+ 
+ //Parsing "metadata" array
+ for (var key3 in json[key]) {
+ 
+ //gs.info("key3: " + key3 + " -- " + json.components[key3]);
+ 
+ //Parsing "latitude" as lat
+ if(!gs.nil(json.metadata[key3] && json.metadata[key3] == "latitude")){
+ switch(key3){
+    case "latitude":
+    lat = json.metadata[key3];
+    break;
+ }
+ }
+ 
+ //Parsing "longitude" as longitude
+ if(!gs.nil(json.metadata[key3] && json.metadata[key3] == "longitude")){
+ switch(key3){
+    case "longitude":
+    longitude = json.metadata[key3];
+    break;
+ }
+ }
+ 
+ //Parsing "county_name" as u_county
+ if(!gs.nil(json.metadata[key3] && json.metadata[key3] == "county_name")){
+ switch(key3){
+    case "county_name":
+    u_county = json.metadata[key3];
+    break;
+ }
+ }
+ 
+ //End of metadata for loop
+ }
+ 
+ //initial for loop
+ }
+ 
+ gs.info('Street = ' + street);
+ gs.info('State = ' + state);
+ gs.info('City = ' + city);
+ gs.info('Zip = ' + zip);
+ gs.info('Latitude = ' + lat);
+ gs.info('Longitude = ' + longitude);
+ gs.info('Country = ' + u_county);]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:21:06</sys_created_on>
+        <sys_id>824eb171c3b5a610c0a0f22ed40131db</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>smartyParse</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_824eb171c3b5a610c0a0f22ed40131db</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:21:06</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

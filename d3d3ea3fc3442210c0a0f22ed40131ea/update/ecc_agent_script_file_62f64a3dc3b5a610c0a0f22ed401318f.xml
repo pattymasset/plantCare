@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="ecc_agent_script_file">
+    <ecc_agent_script_file action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <checksum/>
+        <description/>
+        <directory>false</directory>
+        <name>activeDirectoryUserCheckCSV</name>
+        <parent/>
+        <script>Import-Module ActiveDirectory -WarningAction SilentlyContinue&#13;
+&#13;
+$filepath = "C:\Temp\AD1.csv"&#13;
+&#13;
+$NotAD = Import-Csv $filepath | ForEach-Object{&#13;
+&#13;
+    Get-ADUser -Identity $_.IRMNET -server irmnet.ds2.dhs.gov -Properties * | Select-Object SamAccountName, Name, DisplayName, DistinguishedName, EmailAddress, Enabled, ObjectGUID, SamAccountName, UserPrincipalName, @{n='OU';e={(($_.distinguishedName.Split(",",2)[1]))}}&#13;
+    &#13;
+} | Export-Csv C:\Temp\AD-Not1.csv -NoTypeInformation</script>
+        <script_attachment/>
+        <source/>
+        <sys_class_name>ecc_agent_script_file</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:59:24</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>62f64a3dc3b5a610c0a0f22ed401318f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>activeDirectoryUserCheckCSV</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>ecc_agent_script_file_62f64a3dc3b5a610c0a0f22ed401318f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:59:24</sys_updated_on>
+        <use_attachment>false</use_attachment>
+        <version/>
+    </ecc_agent_script_file>
+</record_update>

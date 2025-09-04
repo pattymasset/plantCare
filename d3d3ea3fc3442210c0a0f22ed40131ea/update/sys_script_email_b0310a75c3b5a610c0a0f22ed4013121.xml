@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_email">
+    <sys_script_email action="INSERT_OR_UPDATE">
+        <name>genes45MailScript</name>
+        <new_lines_to_html>false</new_lines_to_html>
+        <script><![CDATA[//Gene's 45 Day Mail Script
+
+(function runMailScript(/* GlideRecord */ current, /* TemplatePrinter */ template,
+										   /* Optional EmailOutbound */ email, /* Optional GlideRecord */ email_action,
+										   /* Optional GlideRecord */ event) {
+	try {
+		var userUtils = new lastLoginQueries();
+		var userDetails = JSON.parse(event.parm2);   //holds the user's sys_id and last login property - 30, 40, 44, 45 days
+		var loginDays = userDetails.last_login_days;
+		var grpDetails = userDetails.group_names;
+		var roleDetails = userDetails.role_names;
+		var buttonText = gs.getMessage("Click to Fix");
+		var buttonExceptionText = gs.getMessage("Exception Request");
+		var portalUri = gs.getProperty('glide.servlet.uri')+'esc';
+		var portalExceptionReq = gs.getProperty('glide.servlet.uri')+'esc?id=sc_cat_item&sys_id=abaa962987704654a02d42a6cebb3528&sysparm_category=ce355a50dbc77a002ab97e560f961950';
+
+		var warningImage = '<img src="warning2.svg" width="35" height="30"/>';
+
+		if(loginDays == 30 || loginDays == 40 || loginDays == 44 || loginDays == 45){
+
+			//Creates Warning Banner
+			template.print('<table style="width: 100%;text-align: center;font-size: medium; height: 55px;background-color: #c9565680; color: black;vertical-align: middle; font-family: sans-serif,Helvetica Neue,Arial; border: 2px solid red;"><tbody>');
+
+			template.print('<tr>');	
+			template.print('<td style="padding-left: 30px;">'+warningImage+'</td>');
+			template.print('<td style="text-align: left;">Attention: Your Last Login was<strong> '+ loginDays +' </strong>Days Ago</td>');
+			template.print('<td style="text-align: left; padding-top: 5px; display: table-cell;">'+userUtils.outlookRoundedButtonDynamic(buttonText, '15', 'FFFFFF', '26436a', '7', '20%', portalUri) + '&nbsp;</td>');
+			template.print('</tr>');
+			template.print('</tbody></table>');
+
+			//Creates Mesage Body
+			template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;">Hi '+userDetails.first_name+',</p>');
+
+			if(loginDays == 30 || loginDays == 40 || loginDays == 44){
+				template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;">This is to inform you that it has been '+ loginDays +' days since you last logged into ServiceNow. The current security policy stipulates removing account access to applications on the ServiceNow platform after 45 days of inactivity. You will not lose access to ServiceNow totally; you will only lose access to those applications listed below.</p>');
+				template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;">To prevent losing access to applications in ServiceNow, simply clicking on the <b>'+buttonText+'</b> button above will reset your last login date.</p>');
+				
+			} else if(loginDays == 45){
+				template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;">This is to inform you that it has been '+ loginDays +' days since you last logged into ServiceNow. Current security policy stipulates removing account access to applications on the ServiceNow platform after 45 days of inactivity. You will not lose access to ServiceNow totally, only access to those applications listed below.</p>');
+				template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;"> While we understand that you are receiving this notification for the first time, we have scheduled your access to be removed on <b>April 18, 2024</b>.  To fix this, simply clicking on the <b>'+buttonText+'</b> button above will reset your last login date.</p>');
+				template.print('<p style="padding-left: 5px; padding-right: 5px; font-family: sans-serif,Helvetica Neue,Arial;"> Any questions regarding this email notification can be directed to the following mail box: <a href="mailto:EPSB-COE-Admin@ice.dhs.gov">EPSB-COE-Admin@ice.dhs.gov</a></p>');
+
+			}
+
+			//Indicates Exception
+			template.print('<table style="width: 100%;text-align: left; height: 55px; color: black; font-family: sans-serif,Helvetica Neue,Arial;"><tbody>');
+			template.print('<tr>');	
+			template.print('<td style="width: 100%;">');
+			template.print('<p style="padding-left: 2px; font-family: sans-serif,Helvetica Neue, Arial; text-align: left;">To request an exception to this policy, you can click the Exception Request button and submit a request to the Information System Security Officer. If approved, your account will be removed from this security policy.</p>');
+			template.print('</td>');
+			template.print('</tr>');	
+			template.print('<tr>');	
+			template.print('<td style="width: 100%; text-align: right; padding-right: 5px; padding-bottom: 5px;">'+userUtils.outlookRoundedButtonDynamic(buttonExceptionText, '13', '000000', 'f9f96d', '7', '20%', portalExceptionReq, '1px solid black') + '&nbsp;</td>');
+			template.print('</tr>');
+			template.print('</tbody></table>');
+
+		}		
+
+		/*************** Groups Table ******************/
+		
+		if(grpDetails.length > 0) {
+		template.print('<table style="width:100%; border:1px solid #227AC4; text-align: left; font-family: sans-serif,Helvetica Neue,Arial; word-wrap: break-word;">');
+		template.print('<thead>');
+		template.print('<tr>');
+		template.print('<th style="width: 30%; padding: 10px; text-align: left;"><u>Group Name</u></th>');
+		template.print('<th style="width: 40%; text-align: left;"><u>Roles</u></th>');
+		template.print('<th style="width: 30%; text-align: center;"><u>Application</u></th>');
+		template.print('</tr>');
+		template.print('</thead>');
+
+		template.print('<tbody>');
+		for (var i = 0; i < grpDetails.length; i++) {
+			var groups = grpDetails[i];
+			var roleCount = groups.group_roles.length;
+				var sumRoleCount = parseInt(roleCount) + parseInt(1);
+				template.print('<tr>');		
+				template.print('<td style="padding: 7px; font-size: small;" rowspan="'+sumRoleCount+'">'+groups.name+'</td>'); 
+				for (var k = 0; k < groups.group_roles.length; k++){
+					var roles = groups.group_roles[k];
+					template.print('<tr>');
+					template.print('<td style="font-size: small;">'+roles.role+'</td>');
+					template.print('<td style="text-align: center; font-size: small;">'+roles.application+'</td>');
+					template.print('</tr>');
+				}
+			template.print('</tr>');
+		}
+		template.print('</tbody>');
+		template.print('</table>');
+		}
+		
+/*************** Roles Table ******************/
+		
+		var userRole = 	roleDetails.length;
+		if(userRole > 0){
+			template.print('<p style="font-family: sans-serif,Helvetica Neue,Arial;">Roles currently assigned to you that have no association to a group.</p>');
+			template.print('<table style="width:100%; border:1px solid #227AC4; text-align: left; font-family: sans-serif,Helvetica Neue,Arial; word-wrap: break-word;">');
+			template.print('<thead>');
+			template.print('<tr>');
+			template.print('<th style="padding: 10px; text-align: left;"><u>Role Name</u></th>');
+			template.print('<th style="text-align: left;"><u>Application</u></th>');
+			template.print('</tr>');
+			template.print('</thead>');
+
+			template.print('<tbody>');
+		
+			for (var m = 0; m < roleDetails.length; m++){
+				template.print('<tr>');
+				template.print('<td style="padding: 7px; font-size: small;">'+roleDetails[m].role+'</td>');
+				template.print('<td style="font-size: small;">'+roleDetails[m].application+'</td>');
+				template.print('</tr>');
+			}		
+				
+			template.print('</tbody>');
+			template.print('</table>');
+		}
+
+		//Sets Email Subject
+		if(loginDays == 30 || loginDays == 40 || loginDays == 44 || loginDays == 45){
+			email.setSubject(gs.getMessage("Attention: ServiceNow Last Login was "+ loginDays +" Days Ago"));
+		} 
+
+	} catch(e){
+		gs.info("EMAIL Script EXECPTION Images "+e);
+		template.print('Error in Notification Email Script - std_ice_last_login_day_reminder ' + e + ' At line #: ' + e.lineNumber);
+	}
+
+})(current, template, email, email_action, event);]]></script>
+        <sys_class_name>sys_script_email</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:33:58</sys_created_on>
+        <sys_id>b0310a75c3b5a610c0a0f22ed4013121</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>genes45MailScript</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_email_b0310a75c3b5a610c0a0f22ed4013121</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:33:58</sys_updated_on>
+    </sys_script_email>
+</record_update>

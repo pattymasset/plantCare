@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description>Queries sys_dictionary to find all fields that reference the table and field that are used. </description>
+        <name>findTableReferences</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[
+//Declare Variables
+var refTable = '2b7cb100db122200d28cff621f961973';
+var refRecordID = '9f297282db7eb914e9a12e881396195a';
+var  msg = [];
+//Query dictionary table for reference, document_id, and condition fields
+var dict = new GlideRecord('sys_dictionary');
+dict.addQuery('reference', refTable).addOrCondition('internal_type', 'document_id').addOrCondition('internal_type', 'conditions');
+//Do not query audit and log fields
+dict.addQuery('name', 'DOES NOT CONTAIN', 'var__m_');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'ecc_');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'ha_');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'syslog');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_history');
+dict.addQuery('name', 'DOES NOT CONTAIN', '_log');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'text_search');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'ts_');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_watermark');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_audit');
+dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_import_set_row');
+//dict.addQuery('name','STARTSWITH', 'x_');
+dict.addQuery('column_label', 'DOES NOT CONTAIN', 'created by');
+dict.orderBy('name');
+dict.orderBy('element');
+dict.query();
+//var tableList = sys_user_has_role,sys_user_group_member,apms tables, 
+while (dict.next()) {
+try{
+    var tblName = dict.name.toString();
+    // Skip tables used for Table Rotation
+    var gr = new GlideRecord("sys_table_rotation_schedule");
+    gr.addQuery("name.name", '!=', tblName);
+    gr.addQuery("table_name", tblName);
+    gr.query();
+    if (!gr.hasNext()) {
+        var filterOperator = '=';
+        var refType = dict.internal_type;
+        if (refType == 'glide_list' || refType == 'conditions') {
+            filterOperator = 'LIKE';
+        }
+        //Query each table for matching records
+        var rec = new GlideRecord(tblName);
+        if (refType == 'glide_list' || refType == 'conditions') {
+            rec.addQuery(dict.element, 'CONTAINS', refRecordID);
+        } else {
+            rec.addQuery(dict.element, refRecordID);
+        }
+        rec.query();
+        //Add sys_id to array
+        while(rec.next()){
+                msg.push(tblName+': '+rec.sys_id);
+        }
+    }
+    }
+    catch (error) {
+        gs.info(error + "Error in table" + tblName);
+    }
+}
+//Query for workflow variable values
+tblName = 'sys_variable_value';
+var vVal = new GlideRecord(tblName);
+vVal.addQuery('value', 'CONTAINS', refRecordID);
+vVal.query();
+//Add sys_id to array
+while (vVal.next()){
+    msg.push(tblName+': '+vVal.sys_id);
+}
+var arrayUtils = new ArrayUtil();
+var msgUtils = arrayUtils.unique(msg);
+gs.info(msgUtils);
+gs.info(msgUtils.length);
+]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 15:55:02</sys_created_on>
+        <sys_id>d047fd39c375a610c0a0f22ed401315a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>findTableReferences</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_d047fd39c375a610c0a0f22ed401315a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 15:55:02</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

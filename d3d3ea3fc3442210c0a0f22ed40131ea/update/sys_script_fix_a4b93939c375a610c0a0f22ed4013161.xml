@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>locationsFixScript</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[var loc = new GlideRecord('cmn_location');
+loc.addQuery('sys_class_name', 'x_g_dh5_common_dat_office');
+loc.setLimit(200);
+loc.query();
+
+var arr = [];
+
+try { 
+	while (loc.next()) {
+	
+	if (!gs.nil(loc.street) && !gs.nil(loc.zip) && !gs.nil(loc.state) && !gs.nil(loc.city)){
+	//gs.info(loc.u_description + " - " + loc.street + " - " + loc.city + " - " + loc.state + " - " + loc.zip);
+	//Declare variables for current data
+	var locStreet = loc.getValue("street");
+	var locCity = loc.getValue("city");
+	var locState = loc.getValue("state");
+	var locZip = loc.getValue("zip");
+	
+	//gs.info(locStreet + " - " + locCity + " - " + locState + " - " + locZip);
+	
+	//Call Script Include to query SMARTY databasevar 
+	json = new global.validateLocationsUtils().validateSingleAddress(locStreet,'', locCity, locState , locZip);
+	
+	//Assign keys
+	var street = json[0].delivery_line_1;
+	var city = json[0].components.city_name;
+	var state = json[0].components.state_abbreviation;
+	var zip = json[0].components.zipcode;
+	var latitude = json[0].metadata.latitude;
+	var longitude = json[0].metadata.longitude;
+	var county = json[0].metadata.county_name;
+	
+	
+	//Log updated records
+	//gs.info(street + " - " + city + " - " + state + " - " + zip + " - " + latitude + " - " + county);
+	
+	//Update Record
+	loc.street = street;
+	loc.city = city;
+	loc.state = state;
+	loc.latitude = latitude;
+	loc.longitude = longitude;
+	loc.u_county = county;
+	loc.name = street + ", " + city + ", " + state;
+	//loc.setWorkflow(false);
+	loc.update();
+	} //Ends if statement
+	
+	else {
+	arr.push(loc.sys_id+'');
+	}
+} //Ends while loop
+	} //Ends try statement
+	
+	catch (error){
+	gs.info("Error in name: " + error + "& Record: " + loc.street);
+	}
+	
+	gs.info(arr.length);
+	gs.info(arr);
+]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:01:06</sys_created_on>
+        <sys_id>a4b93939c375a610c0a0f22ed4013161</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>locationsFixScript</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_a4b93939c375a610c0a0f22ed4013161</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:01:06</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

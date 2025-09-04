@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>duplicateUserScripts</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[function getDuplicateValues(table, field){
+    var dupValues = [];
+    var ga = new GlideAggregate(table);
+    ga.addAggregate('COUNT', field);
+    ga.addNotNullQuery(field);
+    ga.groupBy(field);
+    ga.addHaving('COUNT', '>', 1);
+    ga.setLimit(10);
+    ga.query();
+    while (ga.next()) {
+      dupValues.push(ga[field].toString());
+    }
+      return dupValues;
+}
+ 
+var dupes = getDuplicateValues('sys_user', 'u_user_principal_name');
+gs.info(dupes);
+ 
+var userArr = [];
+for (var i = 0; i < dupes.length; i++) {
+    var duplicates = new GlideRecord('sys_user');
+    //duplicates.addEncodedQuery('u_user_principal_nameISNOTEMPTY^active=true');
+    //duplicates.addEncodedQuery('u_user_principal_nameISNOTEMPTY');
+    //duplicates.addQuery('u_user_principal_name', '0014853211@ICE.DHS.GOV');
+    duplicates.addEncodedQuery('u_user_principal_name='+dupes[i]);
+    duplicates.query();
+    while (duplicates.next()){
+      userArr.push(duplicates.sys_id+'');
+    }
+}
+ 
+gs.info(userArr.length);
+ 
+var allUsers = [];
+//for (var i = 0; i < userArr.length; i++) {
+    var user1 = new GlideRecord('sys_user');
+    user1.addQuery('sys_id', 'IN', userArr);
+    user1.query();
+ 
+    while (user1.next()) {
+        var user2 = new GlideRecord('sys_user');
+        user2.addQuery('sys_id', "!=",  user1.sys_id);
+        user2.addQuery('u_user_principal_name', user1.u_user_principal_name);
+        user2.addQuery('sys_id', "IN", userArr);
+        user2.query();
+        while (user2.next()){
+            var returnedUsers = compareUser(user1.sys_id, user2.sys_id);
+            allUsers.push(returnedUsers);
+        }
+    }
+//}
+ 
+var snTables = findTables();
+ 
+function compareUser (user1, user2) {
+    var login1 = new GlideRecord('sys_user');
+    login1.get('sys_id', user1);
+ 
+    var login2 = new GlideRecord('sys_user');
+    login2.get('sys_id', user2);
+ 
+    var last1 = new GlideDateTime(login1.getValue('last_login'));
+    var last2 = new GlideDateTime(login2.getValue('last_login'));
+ 
+    var userCompare = [];
+    //userCompare.push('"Root":{');
+ 
+    if (!gs.nil(last1) && !gs.nil(last2) && last1 < last2) {
+        //User 2 has logged in more recently
+        //userCompare.push('"Root":{"goodUser RECENT  USER 2": "'+login2.getValue("name")+' - ' + login2.sys_id + '"');
+        //userCompare.push('"badUser": "'+login1.getValue("name")+' - '  + login1.sys_id + '"}');
+ 
+        userCompare.push({"goodUser":login2.getValue("name"), "sys_id": login2.sys_id+''});
+        userCompare.push({"badUser":login1.getValue("name"), "sys_id": login1.sys_id+''});
+    }
+    else if (!gs.nil(last1) && !gs.nil(last2) && last2 < last1) {
+        //User 1 has logged in more recently
+        //userCompare.push('"Root":{"goodUser RECENT  USER 1": "'+login1.getValue("name")+' - '  + login1.sys_id + '"');
+        //userCompare.push('"badUser": "'+login2.getValue("name")+' - '  + login2.sys_id + '"}');
+       
+        userCompare.push({"goodUser":login1.getValue("name"), "sys_id": login1.sys_id+''});
+        userCompare.push({"badUser":login2.getValue("name"), "sys_id": login2.sys_id+''});
+    }
+ 
+    //If last_login is empty, query sys_updated_on
+    else if (gs.nil(last1) || gs.nil(last2)) {
+        var updated1 = login1.getValue('sys_updated_on');
+        var updated2 = login2.getValue('sys_updated_on');
+ 
+        if (updated1 < updated2) {
+            //User 2 has been updated more recently
+            //userCompare.push('"Root":{"goodUser RECENT  USER 2": "'+login2.getValue("name")+' - '  + login2.sys_id + '"');
+            //userCompare.push('"badUser": "'+login1.getValue("name")+' - '  + login1.sys_id + '"}');
+ 
+            userCompare.push({"goodUser":login2.getValue("name"), "sys_id": login2.sys_id+''});
+            userCompare.push({"badUser":login1.getValue("name"), "sys_id": login1.sys_id+''});
+        }
+        else if (updated2 < updated1) {
+            //User 1 has been updated more recently
+            //userCompare.push('"Root":{"goodUser RECENT USER 1": "'+login1.getValue("name")+' - '  + login1.sys_id + '"');
+            //userCompare.push('"badUser": "'+login2.getValue("name")+' - '  + login2.sys_id + '"}');
+ 
+            userCompare.push({"goodUser":login1.getValue("name"), "sys_id": login1.sys_id+''});
+            userCompare.push({"badUser":login2.getValue("name"), "sys_id": login2.sys_id+''});
+        }
+ 
+    }
+ 
+    var gu = [];
+    var bu;
+    for (var i = 0; i < userCompare.length; i++) {
+        var lm = userCompare[i];
+       
+        //var gu = lm.goodUser;
+        //var bu = lm.badUser;
+        if(lm.hasOwnProperty('goodUser')){
+            gu.push(lm.sys_id);
+        }
+        if(lm.hasOwnProperty('badUser')){
+            bu = lm.sys_id;
+        }
+        //gs.info(JSON.stringify(lm, null, 2));
+    }
+    var findUserReferences = findDictionaryReferences(gu, bu);
+            gs.info(findUserReferences);
+        //  gs.info(gu);
+ 
+       // return userCompare;
+}
+ 
+ 
+function findTables() {
+    var taskTable = 'task';
+    var tableUtil = new TableUtils(taskTable);
+    //var taskTables = tableUtil.getTableExtensions().toArray();
+    var taskTables = tableUtil.getTableExtensions();
+ 
+    /*var cmdbTable = 'cmdb';
+    var tableUtil = new TableUtils(cmdbTable);
+    var cmdbTables = tableUtil.getTableExtensions().toArray();*/
+ 
+    //var allTables = taskTables.concat(cmdbTables);
+    return taskTables;
+}
+ 
+//gs.info(findTables());
+ 
+function findDictionaryReferences(userRecord) {
+ 
+    var snTables = findTables();
+   
+   
+    var userRefArr = [];
+    //Query dictionary table for Task and CMDB Tables
+    var dict = new GlideRecord('sys_dictionary');
+    //dict.addQuery('name', 'IN', snTables);
+    //dev SysID for User table
+    dict.addEncodedQuery('reference=sys_user^nameIN'+snTables);  //sys_idIN28dd2c721bef8ad0c73ceca5604bcb32
+    dict.setLimit(10);
+    dict.query();
+    while (dict.next()) {
+        //userRefArr.push(dict.sys_id+'');
+        userRefArr.push(dict.getValue("element"));
+    }
+    var getDickFields = dickFields(dict, userRefArr, userRecord);
+    return getDickFields;
+}
+ 
+function dickFields(dickObj, userRecord){
+    var msg = [];
+          try {
+           
+           
+                var tblName = dickObj.name.toString();
+                //gs.info(tblName);
+                var refType = dickObj.internal_type;
+                gs.info(refType);
+ 
+                //Query each table for matching records
+                var rec = new GlideRecord('incident');
+                //if (refType == 'glide_list' || refType == 'conditions') {
+                    //rec.addQuery('element', 'IN', userRefArr );//reference=sys_user^internal_type=reference
+                //} else {
+                    rec.addQuery(dickObj.element, 'IN', userRecord);
+                //}
+                rec.query();
+                //Add sys_id to array
+                while (rec.next()) {
+                    msg.push(tblName + ': ' + rec.sys_id);
+                }
+            }
+            catch (error) {
+                gs.info(error + "Error in table" + tblName);
+            }
+       
+   
+    return msg;
+}
+ ]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:10:51</sys_created_on>
+        <sys_id>b7eb7179c375a610c0a0f22ed4013105</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>duplicateUserScripts</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_b7eb7179c375a610c0a0f22ed4013105</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:10:51</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

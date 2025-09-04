@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_email">
+    <sys_script_email action="INSERT_OR_UPDATE">
+        <name>demandRequesterStateChanges</name>
+        <new_lines_to_html>false</new_lines_to_html>
+        <script><![CDATA[(function runMailScript(current, template, email, email_action, event) {
+
+    //Get Record Variables
+    var sysClassName = current.getTableName();
+    var number = current.getDisplayValue("number");
+    var url = current.getLink();
+	var instance = gs.getProperty('instance_name')
+    var state = current.getDisplayValue("state");
+    var shortDesc = current.getValue("short_description");
+    var desc = current.getValue("description");
+
+    var user = current.getValue("opened_by");
+    var userGr = new GlideRecord("sys_user");
+    userGr.get(user);
+    var firstName = userGr.getValue("first_name");
+    var userEmail = userGr.getValue("email");
+    var userPhone = userGr.getValue("phone");
+    var userName = userGr.name;
+
+    //Create Demand Header
+    template.print('<table style="width:100%; text-align:center; font-size:large; height:30px; background-color:#26436a; color: white; vertical-align: middle;">');
+    template.print('<tbody>');
+
+    template.print('<tr><td><strong>Demand: ' + number + '</strong></td></tr>');
+
+    template.print('</tbody></table>');
+
+    //Create Message Body
+    template.print('<tr><td>');
+    template.print('<table class="table_border" style="text-align:left;" cellspacing="0" cellpadding="0">');
+    template.print('<tbody>');
+
+    template.print('<tr style="text-align: center;font-size:large; height:10px;">');
+    template.print('<td>');
+    template.print('</td>');
+    template.print('<td>');
+    template.print('</td>');
+    template.print('<td>');
+    template.print('</td>');
+    template.print('</tr>');
+    template.print('<tr>');
+    template.print('<td style="padding-left: 10px; padding-right: 5px; font-size: 12px; width: 65%;" valign="top">');
+    template.print('<p><span style="font-size: 16px;">Hi ' + firstName + ',</span></p>');
+
+    if (state == "Draft") {
+        template.print('<div>Demand <strong>' + number + '</strong> has been created to handle your recent request. An assessment has been sent for some additional information. In order for your request to be added to the EPDO Review Agenda, please complete the "MicroApp Assessment".</div>');
+        email.setSubject('Demand ' + number + ' has been opened on your behalf and is awaiting additional information');
+    } else if (state == "Submitted") {
+        template.print('<div>Your request <strong>' + number + '</strong> has been added to the EPSB Platform Development Onboarding (EPDO) Agenda for stakeholder engagement and review. Please attend the meeting on Monday at 12pm ET to present your request and answer questions. Reach out to EPSB-COE-Admin if you have any questions.</div>');
+        email.setSubject('Demand ' + number + ' has been added to the EPDO Review Agenda');
+    } else if (state == "Screening") {
+        template.print('<div>Demand Tasks have been assigned to the stakeholders for additional review and engagement. Please work with these groups to provide any additional requirements, documentation, and answer any questions.</div>');
+        email.setSubject('Demand ' + number + ' is currently under additional review by the stakeholders');
+    } else if (state == "Qualified") {
+        template.print('<div>All stakeholders have completed their requests for additional information and your request has been added to the EPSB Platform Development Onboarding (EPDO) Board for final approval. If desired, attend the EPDO Board meeting to review status of your request.</div>');
+        email.setSubject('Demand ' + number + ' has been added to the EPDO Board for final approval');
+    } else if (state == "Approved") {
+        template.print('<div><strong>' + number + '</strong> has been approved. Please ensure continued collaboration with key stakeholders as you continue through the development cycle. Reach out to EPSB-COE-Admin with any questions.</div>');
+        email.setSubject('Demand ' + number + ' has been approved');
+    } else if (state == "Completed") {
+        template.print('<div>It has been 30 days since your request was approved and your request has been completed.</div>');
+        email.setSubject('Demand ' + number + ' has been completed');
+    }
+
+    template.print('<p><span style="font-size: 16px; font-weight: bold">About this request</span></p>');
+
+    template.print("<ul>");
+    //Old
+    template.print('<li><a href="https://iceserviceportal.servicenowservices.com/"' + url + '" target="_top">' + number + '</a>:  ' + shortDesc + '</li>');
+    //Updated
+    template.print('<li><a href="https://"' + instance + '"servicenowservices.com/"' + url + '" target="_top">' + number + '</a>:  ' + shortDesc + '</li>');
+    template.print("</ul>");
+
+    template.print('<br>');
+    template.print('<p>Click above to see more information about this request.</p>');
+
+
+    template.print('<br>');
+    template.print('<br/>');
+    template.print('<div>Best Regards,</div>');
+    template.print('<div>EPDO Demand Management Team</div>');
+
+    template.print('<td>');
+
+    //<!--RIGHT COLUMN FIRST BOX-->
+    template.print('<td style="border-left: #26436a 2px solid; padding-left:10px; width:35%;" valign="top">');
+    template.print('<table style="font-size:12px" cellspacing="0" cellpadding="0" width="95%">');
+    template.print('<tbody>');
+    template.print('<tr>');
+    template.print('<td>');
+    template.print('<div><span style="font:bold 16px Arial, Helvetica, sans-serif; color:#002d4e; padding-bottom:5px;">Demand Information</span></div>');
+    template.print('<p>Number:  ' + number + '</p>');
+    template.print('<p>State:  ' + state + '</p>');
+
+    template.print('<p>Opened for:  ' + userName + '</p>');
+    template.print('<p>Email:  ' + userEmail + '</p>');
+    if (!gs.nil(userPhone)) {
+        template.print('<p>Phone:  ' + userPhone + '</p>');
+    }
+    template.print('</td>');
+    template.print('</tr>');
+    template.print('</tbody>');
+    template.print('</table>');
+    template.print('<br>');
+
+    //<!--RIGHT COLUMN SECOND BOX-->
+    template.print('<table style="font-size: 12px" cellspacing="0" cellpadding="0" width="100%">');
+    template.print('<tbody>');
+    template.print('<tr>');
+    template.print('<td>');
+    template.print('<p style="font:bold 16px Arial, Helvetica, sans-serif; color:#002d4e";>Have any questions?</p>');
+    template.print('<div>Do not hesitate to hit the reply button to any of the messages you received.</div>');
+    template.print('<br>');
+
+    template.print('<br>');
+
+    template.print('</td>');
+    template.print('</tr>');
+    template.print('</tbody>');
+    template.print('</table>');
+    template.print('</td>');
+    template.print('</tr>');
+    template.print('<tr style="text-align: center;font-size: large;height: 10px;">');
+    template.print('<td></td>');
+    template.print('<td></td>');
+    template.print('<td></td>');
+    template.print('</tr>');
+    template.print('</tbody>');
+    template.print('</table');
+
+    template.print('</td>');
+    template.print('</tr>');
+
+})(current, template, email, email_action, event);]]></script>
+        <sys_class_name>sys_script_email</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:26:00</sys_created_on>
+        <sys_id>fb5f35f1c3b5a610c0a0f22ed4013102</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>demandRequesterStateChanges</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_email_fb5f35f1c3b5a610c0a0f22ed4013102</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:26:00</sys_updated_on>
+    </sys_script_email>
+</record_update>

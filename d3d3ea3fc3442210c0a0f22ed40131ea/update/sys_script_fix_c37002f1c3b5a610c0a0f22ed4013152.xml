@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>capstoneTransformMap</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[// Add your code here
+
+var impSet = new GlideRecord("x_g_dh5_appointed_capstone_bodega_data");
+impSet.get("0e40c8a01b5c66d0065762cae54bcb94");
+
+var currentPosition = impSet.u_capposid;
+
+var emailAddress = impSet.u_email.toString();
+
+//Check to verify is assigned to actual user
+if (!gs.nil(emailAddress) && emailAddress !== "Vacant") {
+
+    //Query for other records for user in Import Set
+    var isetGR = new GlideRecord('x_g_dh5_appointed_capstone_bodega_data');
+    isetGR.addQuery("sys_import_set", impSet.sys_import_set);
+    isetGR.addQuery("u_email", emailAddress);
+    isetGR.query();
+
+    if (isetGR.next()) {
+
+        //If impSet.u_end_date is null, user is still an active appointed position on the impSet record
+        if (gs.nil(impSet.u_end_date)) {
+            currentRetentionGroup(emailAddress);
+        }
+
+        //If user is no longer an active appointed position (on impSet or isetGR record), u_retention group is set to none
+        else if (!gs.nil(impSet.u_end_date) && !gs.nil(isetGR.u_end_date)) {
+            retiredUser(emailAddress);
+        }
+    }
+
+    //If duplicate is not found and user is no longer an active appointed position
+    else if (!gs.nil(impSet.u_end_date)) {
+        retiredUser(emailAddress);
+    }
+
+    //If duplicate is not found and IS an active appointed position
+    else if (gs.nil(impSet.u_end_date)) {
+        currentRetentionGroup(emailAddress);
+    }
+
+}
+
+function userQuery(userEmail) {
+    var capstoneUser = new GlideRecord("sys_user");
+    capstoneUser.addQuery("email", userEmail);
+    //capstoneUser.addEncodedQuery('email=Erik.P.Breitzke@ice.dhs.gov');
+    capstoneUser.query();
+
+    if (capstoneUser.next()) {
+        return capstoneUser;
+    }
+}
+
+function currentRetentionGroup(userEmail) {
+    var getUserRecord = this.userQuery(userEmail);
+    getUserRecord.setValue("u_retention_group", currentPosition);
+    getUserRecord.setWorkflow(false);
+    getUserRecord.update();
+}
+
+function retiredUser(userEmail) {
+    var getUserRecord = this.userQuery(userEmail);
+    getUserRecord.setValue("u_retention_group", "");
+    getUserRecord.setWorkflow(false);
+    getUserRecord.update();
+}]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:30:58</sys_created_on>
+        <sys_id>c37002f1c3b5a610c0a0f22ed4013152</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>capstoneTransformMap</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_c37002f1c3b5a610c0a0f22ed4013152</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:30:58</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

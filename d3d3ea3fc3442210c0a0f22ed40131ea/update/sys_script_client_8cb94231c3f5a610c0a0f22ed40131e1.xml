@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_script_client">
+    <sys_script_client action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <applies_extended>false</applies_extended>
+        <condition/>
+        <description/>
+        <field>caller_id</field>
+        <global>true</global>
+        <isolate_script>true</isolate_script>
+        <messages/>
+        <name>Phone Number Format</name>
+        <order/>
+        <script><![CDATA[function onChange(control, oldValue, newValue, isLoading) {
+   if (isLoading || newValue == '') {
+      return;
+   }
+
+   var pattern = /^\(\d{3}\)\s\d{3}-\d{4}$/; //(xxx) xxx-xxxx
+	var phone = g_form.getValue('lea_phone_number');
+	if(!pattern.test(phone)){
+		
+		phone = phone.replace(/\D/g,'');
+		var regex = /^\d{10}$/;
+		var is_valid = regex.test(phone);
+		if(!is_valid){
+			g_form.setValue('lea_phone_number', '');
+			g_form.showFieldMsg("lea_phone_number", "Invalid phone number. Please enter 10 digits.", "error");
+
+			setTimeout("var refocus = document.getElementById('sp_formfield_lea_phone_number');refocus.focus();",0);
+		} else {
+			phone = '(' + phone.slice(0,3) + ') ' + phone.slice(3,6)+'-' + phone.slice(6,10);
+			g_form.setValue('lea_phone_number', phone);
+		}
+	}
+   
+}]]></script>
+        <sys_class_name>sys_script_client</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 17:12:02</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>8cb94231c3f5a610c0a0f22ed40131e1</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Phone Number Format</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_client_8cb94231c3f5a610c0a0f22ed40131e1</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 17:12:02</sys_updated_on>
+        <table>incident</table>
+        <type>onChange</type>
+        <ui_type>10</ui_type>
+        <view/>
+    </sys_script_client>
+</record_update>

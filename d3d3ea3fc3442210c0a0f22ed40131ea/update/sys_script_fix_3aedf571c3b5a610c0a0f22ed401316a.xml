@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>mergeDuplicates</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[//Get list of duplicates
+//-------------------------------------------------------------------------------------------------------------------------
+function getDuplicateValues(table, field){
+    var dupValues = [];
+    var ga = new GlideAggregate(table);
+    ga.addAggregate('COUNT', field);
+    ga.addNotNullQuery(field);
+    ga.groupBy(field);
+    ga.addHaving('COUNT', '>', 1);
+    ga.setLimit(10);
+    ga.query();
+    while (ga.next()) {
+      dupValues.push(ga[field].toString());
+    }
+      return dupValues;
+}
+    
+var dupes = getDuplicateValues('sys_user', 'u_user_principal_name');
+var userArr = [];
+for (var i = 0; i < dupes.length; i++) {
+    var duplicates = new GlideRecord('sys_user');
+    duplicates.addEncodedQuery('u_user_principal_nameISNOTEMPTY^active=true');
+    //duplicates.addQuery('u_user_principal_name', '0014853211@ICE.DHS.GOV');
+    duplicates.addEncodedQuery('u_user_principal_name='+dupes[i]);
+    duplicates.query();
+    while (duplicates.next()){
+      userArr.push(duplicates.sys_id+'');
+    }
+}
+
+
+//Find "Twin" Accounts
+//-------------------------------------------------------------------------------------------------------------------------
+//Tamara Raynor - 28dd2c721bef8ad0c73ceca5604bcb32 (good)
+//Tamara Kauffman - 289e7488db1132402ab97e560f9619ef (bad)
+var userArr = ['289e7488db1132402ab97e560f9619ef','28dd2c721bef8ad0c73ceca5604bcb32'];
+var allUsers = [];
+for (var i = 0; i < userArr.length; i++) {
+    var user1 = new GlideRecord('sys_user');
+    user1.addQuery('sys_id', userArr[i]);
+    user1.query();
+
+    if (user1.next()) {
+        var user2 = new GlideRecord('sys_user');
+        user2.addQuery('sys_id', "!=",  user1.sys_id);
+        user2.addQuery('u_user_principal_name', user1.u_user_principal_name);
+        user2.addQuery('sys_id', "IN", userArr);
+        user2.query();
+        while (user2.next()){
+            var returnedUsers = compareUser(user1.sys_id, user2.sys_id);
+            allUsers.push(returnedUsers);
+        }
+    }
+}
+
+var arrayUtils = new ArrayUtil();
+var activeUsers = arrayUtils.unique(allUsers);
+
+//-------------------------------------------------------------------------------------------------------------------------
+function compareUser (user1, user2) {
+    var login1 = new GlideRecord('sys_user');
+    login1.get('sys_id', user1);
+
+    var login2 = new GlideRecord('sys_user');
+    login2.get('sys_id', user2);
+
+    var last1 = new GlideDateTime(login1.getValue('last_login'));
+    var last2 = new GlideDateTime(login2.getValue('last_login'));
+
+    var userCompare = [];
+    //userCompare.push('"Root":{');
+
+    if (!gs.nil(last1) && !gs.nil(last2) && last1 < last2) {
+        //User 2 has logged in more recently
+        //var userStr = '"goodUser": "' + login2.sys_id + '", "badUser": "' + login1.sys_id + '"';
+        userCompare.push('"Root":{"goodUser": "' + login2.sys_id + '"');
+        userCompare.push('"badUser": "' + login1.sys_id + '"}');
+    }
+    else if (!gs.nil(last1) && !gs.nil(last2) && last2 < last1) {
+        //User 1 has logged in more recently
+        userCompare.push('"Root":{"goodUser": "' + login1.sys_id + '"');
+        userCompare.push('"badUser": "' + login2.sys_id + '"}');
+    }
+
+    //If last_login is empty, query sys_updated_on
+    else if (gs.nil(last1) || gs.nil(last2)) {
+        var updated1 = login1.getValue('sys_updated_on');
+        var updated2 = login2.getValue('sys_updated_on');
+
+        if (updated1 < updated2) {
+            //User 2 has been updated more recently
+            userCompare.push('"Root":{"goodUser": "' + login2.sys_id + '"');
+            userCompare.push('"badUser": "' + login1.sys_id + '"}');
+        }
+        else if (updated2 < updated1) {
+            //User 1 has been updated more recently
+            userCompare.push('"Root":{"goodUser": "' + login1.sys_id + '"');
+            userCompare.push('"badUser": "' + login2.sys_id + '"}');
+        }
+
+    }
+
+        //userCompare.push('},')
+        return userCompare;
+
+}
+
+//Find Related Records
+//Need Gene help
+//-------------------------------------------------------------------------------------------------------------------------
+var allUsers = '{"goodUser": "28dd2c721bef8ad0c73ceca5604bcb32","badUser": "289e7488db1132402ab97e560f9619ef"}';
+gs.info(typeof allUsers);
+var parser = new JSONParser();
+var parsedData = parser.parse(allUsers);
+gs.info(JSON.stringify(parsedData));
+gs.info(parsedData.goodUser);
+
+for (var i = 0; i < parsedData.length; i++) {
+gs.info(parsedData[i].goodUser);
+gs.info(parsedData[i].badUser);
+}
+
+//var allUsers = '{"root":{"goodUser":"28dd2c721bef8ad0c73ceca5604bcb32","badUser":"289e7488db1132402ab97e560f9619ef"},"root":{"goodUser":"123","badUser":"1233"}}';
+var snTables = findTables();
+
+var userStr = JSON.stringify(allUsers);
+var parsedUsers = JSON.parse(userStr);
+
+for (var i = 0; i < parsedUsers.length; i++) {
+
+    var refTbl = '2b7cb100db122200d28cff621f961973';
+
+    gs.info(allUsers);
+    JSON.parse(parsedUsers[i]);
+    var gu = parsedUsers.goodUser;
+    var bu = parsedUsers.badUser;
+    gs.info("gu: " + gu);
+    gs.info("bu: " + bu);
+
+    var findUserReferences = findDictionaryReferences(refTbl, gu, bu);
+    var findCatalogReferences = findVariableReferences(gu, bu);
+
+}
+
+//------------------------------------------------------------------------------------------------
+//Queries sys_dictionary for all related records
+//----------------------------------------------------------------------
+//Pass refTbl as Table Name (i.e. sys_user, incident, cmn_location, etc.)
+//Pass userRecord as user sys_id (i.e. 28dd2c721bef8ad0c73ceca5604bcb32)
+//------------------------------------------------------------------------------------------------
+function findDictionaryReferences(refTbl, userRecord) {
+
+    var snTables = this.findTables();
+    
+    var msg = [];
+    //Query dictionary table for Task and CMDB Tables
+    var dict = new GlideRecord('sys_dictionary');
+    dict.addQuery('name', 'IN', snTables);
+    //dev SysID for User table
+    dict.addQuery('reference', refTbl);
+    dict.query();
+    
+        while (dict.next()) {
+            try {
+                var tblName = dict.name.toString();
+                var refType = dict.internal_type;
+
+                //Query each table for matching records
+                var rec = new GlideRecord(tblName);
+                if (refType == 'glide_list' || refType == 'conditions') {
+                    rec.addQuery(dict.element, 'CONTAINS', userRecord);
+                } else {
+                    rec.addQuery(dict.element, userRecord);
+                }
+                rec.query();
+                //Add sys_id to array
+                while (rec.next()) {
+                    msg.push(tblName + ': ' + rec.sys_id);
+                }
+            }
+            catch (error) {
+                gs.info(error + "Error in table" + tblName);
+            }
+        }
+    
+    return msg;
+}
+    
+    
+//------------------------------------------------------------------------------------------------
+//Queries Submitted Variables to update accordingly
+//Pass userRecord as sys_id (string)
+//------------------------------------------------------------------------------------------------
+function findVariableReferences(userRecord) {
+    var msg = [];
+    tblName = 'sys_variable_value';
+
+    var vVal = new GlideRecord(tblName);
+    vVal.addQuery('value', 'CONTAINS', userRecord);
+    vVal.query();
+    //Add sys_id to array
+    while (vVal.next()) {
+        msg.push(tblName + ': ' + vVal.sys_id);
+    }
+
+    return msg;
+}
+    
+//------------------------------------------------------------------------------------------------
+//Queries sys_db_object to find all tables that extend Task [task] and CMDB [cmdb]
+//------------------------------------------------------------------------------------------------
+function findTables() {
+    var taskTable = 'task';
+    var tableUtil = new TableUtils(taskTable);
+    var taskTables = tableUtil.getTableExtensions().toArray();
+
+    var cmdbTable = 'cmdb';
+    var tableUtil = new TableUtils(cmdbTable);
+    var cmdbTables = tableUtil.getTableExtensions().toArray();
+
+    var allTables = taskTables.concat(cmdbTables);
+    return allTables;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+function findDictionaryReferences(refTbl, gu, bu) {
+    var dict = new GlideRecord('sys_dictionary');
+    dict.addQuery('name', 'IN', snTables);
+    //dev SysID for User table
+    dict.addQuery('reference', refTbl);
+    dict.query();
+
+    while(dict.next()) {
+        try {
+            var tblName = dict.name.toString();
+
+            var refType = dict.internal_type;
+
+            var rec = new GlideRecord(tblName);
+            if (refType == 'glide_list' || refType == 'conditions') {
+                rec.addQuery(dict.element, 'CONTAINS', bu);
+            } else {
+                rec.addQuery(dict.element, bu);
+            }
+            rec.query();
+            //Add sys_id to array
+            while(rec.next()){
+                    var tblPair = [];
+                    //msg.push(tblName+': '+rec.sys_id);
+                    tblPair.push('"tblName": "' + tblName + '"');
+                    tblPair.push('"sys_id": "' + rec.sys_id + '"');
+                    msg.push(tblPair);
+            }
+        }
+        catch (error) {
+            gs.info(error + "Error in table" + tblName);
+        }
+    }
+}
+
+function findVariableReferences(gu, bu) {
+    //Query for workflow variable values
+    tblName = 'sys_variable_value';
+    var vVal = new GlideRecord(tblName);
+    vVal.addQuery('value', 'CONTAINS', bu);
+    vVal.query();
+    //Add sys_id to array
+    while (vVal.next()){
+        msg.push(tblName+': '+vVal.sys_id);
+        vVal.setValue('value', gu);
+    }
+}
+
+var arrayUtils = new ArrayUtil();
+var msgUtils = arrayUtils.unique(msg);
+
+gs.info(msgUtils);
+gs.info(msgUtils.length);]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:19:31</sys_created_on>
+        <sys_id>3aedf571c3b5a610c0a0f22ed401316a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>mergeDuplicates</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_3aedf571c3b5a610c0a0f22ed401316a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:19:31</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>stripColon</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[(function execute(inputs, outputs) {
+    // ... code ...
+    var obj = {
+        "rdfs:member": [{
+            "spi:triStateProvTX": "CONNECTICUT",
+            "spi:triCityTX": "AVON",
+            "spi:triNameTX": "CT-038",
+            "spi:triGovUSFedRPUniqueID-triRPUniqueIdentiferTX": null,
+            "spi:action": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/system/action/cstSNOWBuildingRS/14777463",
+            "spi:triGisLongitudeNU": -72.800577,
+            "spi:triZipPostalTX": "06001",
+            "spi:triGisLatitudeNU": 41.774988,
+            "rdf:about": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/so/cstSNOWBuildingRS/14777463",
+            "spi:triAddressTX": "376 Deercliff Road"
+        }, {
+            "spi:triStateProvTX": "CONNECTICUT",
+            "spi:triCityTX": "BETHANY",
+            "spi:triNameTX": "CT-180",
+            "spi:triGovUSFedRPUniqueID-triRPUniqueIdentiferTX": null,
+            "spi:action": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/system/action/cstSNOWBuildingRS/14777912",
+            "spi:triGisLongitudeNU": -73.000027,
+            "spi:triZipPostalTX": "06524",
+            "spi:triGisLatitudeNU": 41.404768,
+            "rdf:about": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/so/cstSNOWBuildingRS/14777912",
+            "spi:triAddressTX": "93 Old Amity Road"
+        }, {
+            "spi:triStateProvTX": "CONNECTICUT",
+            "spi:triCityTX": "BOLTON",
+            "spi:triNameTX": "CT-039",
+            "spi:triGovUSFedRPUniqueID-triRPUniqueIdentiferTX": null,
+            "spi:action": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/system/action/cstSNOWBuildingRS/14777478",
+            "spi:triGisLongitudeNU": -72.45492,
+            "spi:triZipPostalTX": "06066",
+            "spi:triGisLatitudeNU": 41.800192,
+            "rdf:about": "https://rpmsfqt.ice.dhs.gov/rpms/oslc/so/cstSNOWBuildingRS/14777478",
+            "spi:triAddressTX": "302 Box Mountain Drive"
+        }, ]
+    };
+    var stripColon = function(obj) {
+        var result = {};
+        var counter = 0;
+        for (var property in obj) {
+            if (typeof obj[property] === 'object') {
+                obj[property] = stripColon(obj[property])
+            }
+            result[property.replace(/(.*[^abc][:])/g, '')] = obj[property];
+        }
+        return result;
+    };
+
+    var arr = {
+        "member": []
+    };
+
+    var locations = stripColon(obj);
+    for (var prop in locations.member) {
+        arr.member.push(locations.member[prop]);
+    }
+    gs.info(JSON.stringify(arr, null, 2));
+})(inputs, outputs);]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:27:15</sys_created_on>
+        <sys_id>498ff9f9c375a610c0a0f22ed401311a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>stripColon</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_498ff9f9c375a610c0a0f22ed401311a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:27:15</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>syncDashboardPermission</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[
+var dashboardTabM2M = new GlideRecord('pa_m2m_dashboard_tabs');
+dashboardTabM2M.addQuery("dashboard",'45f67d111b704254f7270d46624bcb46');
+dashboardTabM2M.query();
+var pages = [];
+while (dashboardTabM2M.next()) {
+    pages.push(dashboardTabM2M.tab.page.sys_id + "");
+}
+var reportIds = [];
+pages.forEach(function(pageID) {
+    var portals = new GlideRecord("sys_portal");
+    portals.addQuery("page", pageID);
+    portals.query();
+    while (portals.next()) {
+        var pageProp = new GlideRecord('sys_portal_preferences');
+        pageProp.addQuery("portal_section", portals.getUniqueValue());
+        pageProp.addQuery("name", "sys_id");
+        pageProp.query();
+        if (pageProp.next()) {
+            reportIds.push(pageProp.getValue("value"));
+        }
+    }
+});
+var shareUsers = [];
+var shareRoles = [];
+var shareGroup = [];
+var dashboardPerms = new GlideRecord("pa_dashboards_permissions");
+dashboardPerms.addQuery("dashboard", '45f67d111b704254f7270d46624bcb46');
+dashboardPerms.query();
+while (dashboardPerms.next()) {
+    if (dashboardPerms.type == "2")
+        shareGroup.push(dashboardPerms.getValue("group"));
+    if (dashboardPerms.type == "1")
+        shareRoles.push(dashboardPerms.getValue("role"));
+    if (dashboardPerms.type == "3")
+        shareUsers.push(dashboardPerms.getValue("user"));
+}
+var reportGR = new GlideRecord("sys_report");
+reportGR.addQuery("sys_id", "IN", reportIds.join(","));
+reportGR.query();
+while (reportGR.next()) {
+    reportGR.setValue("user", "group");
+    reportGR.update();
+}
+reportIds.forEach(function(reportId) {
+    var validCheck = new GlideRecord('sys_report');
+    if(!validCheck.get(reportId))
+    return; // not a real report id
+    shareGroup.forEach(function(groupId) {
+        var reportPerm = new GlideRecord("sys_report_users_groups");
+        reportPerm.addQuery("report_id", reportId);
+        reportPerm.addQuery("group_id", groupId);
+        reportPerm.query();
+        if (reportPerm.next()) {
+            gs.addInfoMessage(gs.getMessage("Report {0} is already shared with group {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("group_id")]));
+        } else {
+            reportPerm.newRecord();
+            reportPerm.setValue("report_id", reportId);
+            reportPerm.setValue("group_id", groupId);
+            reportPerm.insert();
+            gs.addInfoMessage(gs.getMessage("Report {0} shared with group {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("group_id")]));
+        }
+    });
+    shareUsers.forEach(function(userId) {
+        var reportPerm = new GlideRecord("sys_report_users_groups");
+        reportPerm.addQuery("report_id", reportId);
+        reportPerm.addQuery("user_id", userId);
+        reportPerm.query();
+        if (reportPerm.next()) {
+            gs.addInfoMessage(gs.getMessage("Report {0} is already shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+        } else {
+            reportPerm.newRecord();
+            reportPerm.setValue("report_id", reportId);
+            reportPerm.setValue("user_id", userId);
+            reportPerm.insert();
+            gs.addInfoMessage(gs.getMessage("Report {0} shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+        }
+    });
+    shareRoles.forEach(function(roleId) {
+        var userIds = [];
+        var userRoleGR = new GlideRecord("sys_user_has_role");
+        userRoleGR.addQuery("user.active", true);
+        userRoleGR.addQuery("role", roleId);
+        userRoleGR.query();
+        var roleName;
+        while (userRoleGR.next()) {
+            if(!roleName){
+                roleName = userRoleGR.getDisplayValue("role");//for info msg
+            }
+            userIds.push(userRoleGR.getValue("user"));
+        }
+        var au = new global.ArrayUtil();
+        userIds = au.unique(userIds);
+        
+        var reportName;
+        userIds.forEach(function(userId) {
+            var reportPerm = new GlideRecord("sys_report_users_groups");
+            reportPerm.addQuery("report_id", reportId);
+            reportPerm.addQuery("user_id", userId);
+            reportPerm.query();
+            if (reportPerm.next()) {
+//                 gs.addInfoMessage(gs.getMessage("Report {0} is already shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+            } else {
+                reportPerm.newRecord();
+                reportPerm.setValue("report_id", reportId);
+                reportPerm.setValue("user_id", userId);
+                reportPerm.insert();
+//                 gs.addInfoMessage(gs.getMessage("Report {0} shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+            }
+            if(!reportName){
+                reportName = reportPerm.getDisplayValue("report_id");
+            }
+        });
+        gs.addInfoMessage(gs.getMessage("Report {0} shared with {1} users who have the {2} role",[reportName, userIds.length + "", roleName]));
+    });
+});
+
+var dashboardTabM2M = new GlideRecord('pa_m2m_dashboard_tabs');
+dashboardTabM2M.addQuery("dashboard",/*insert sysid*/);
+dashboardTabM2M.query();
+var pages = [];
+ 
+while (dashboardTabM2M.next()) {
+    pages.push(dashboardTabM2M.tab.page.sys_id + "");
+}
+ 
+var reportIds = [];
+pages.forEach(function(pageID) {
+    var portals = new GlideRecord("sys_portal");
+    portals.addQuery("page", pageID);
+    portals.query();
+    while (portals.next()) {
+        var pageProp = new GlideRecord("sys_portal_preferences");
+        pageProp.addQuery("portal_section", portals.getUniqueValue());
+        pageProp.addQuery("name", "sys_id");
+        pageProp.query();
+        if (pageProp.next()) {
+            reportIds.push(pageProp.getValue("value"));
+        }
+    }
+});
+ 
+var shareUsers = [];
+var shareRoles = [];
+var shareGroup = [];
+var dashboardPerms = new GlideRecord("pa_dashboards_permissions");
+dashboardPerms.addQuery("dashboard", /*insert sysid*/);
+dashboardPerms.query();
+while (dashboardPerms.next()) {
+    if (dashboardPerms.type == "2")
+        shareGroup.push(dashboardPerms.getValue("group"));
+    if (dashboardPerms.type == "1")
+        shareRoles.push(dashboardPerms.getValue("role"));
+    if (dashboardPerms.type == "3")
+        shareUsers.push(dashboardPerms.getValue("user"));
+}
+ 
+var reportGR = new GlideRecord("sys_report");
+reportGR.addQuery("sys_id", "IN", reportIds.join(","));
+reportGR.query();
+while (reportGR.next()) {
+    reportGR.setValue("user", "group");
+    reportGR.update();
+}
+ 
+reportIds.forEach(function(reportId) {
+    var validCheck = new GlideRecord('sys_report');
+    if(!validCheck.get(reportId))
+    return; // not a real report id
+ 
+    shareGroup.forEach(function(groupId) {
+        var reportPerm = new GlideRecord("sys_report_users_groups");
+        reportPerm.addQuery("report_id", reportId);
+        reportPerm.addQuery("group_id", groupId);
+        reportPerm.query();
+        if (reportPerm.next()) {
+            gs.addInfoMessage(gs.getMessage("Report {0} is already shared with group {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("group_id")]));
+        } else {
+            reportPerm.newRecord();
+            reportPerm.setValue("report_id", reportId);
+            reportPerm.setValue("group_id", groupId);
+            reportPerm.insert();
+            gs.addInfoMessage(gs.getMessage("Report {0} shared with group {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("group_id")]));
+        }
+    });
+ 
+    shareUsers.forEach(function(userId) {
+        var reportPerm = new GlideRecord("sys_report_users_groups");
+        reportPerm.addQuery("report_id", reportId);
+        reportPerm.addQuery("user_id", userId);
+        reportPerm.query();
+        if (reportPerm.next()) {
+            gs.addInfoMessage(gs.getMessage("Report {0} is already shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+        } else {
+            reportPerm.newRecord();
+            reportPerm.setValue("report_id", reportId);
+            reportPerm.setValue("user_id", userId);
+            reportPerm.insert();
+            gs.addInfoMessage(gs.getMessage("Report {0} shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+        }
+    });
+ 
+    shareRoles.forEach(function(roleId) {
+        var userIds = [];
+        var userRoleGR = new GlideRecord("sys_user_has_role");
+        userRoleGR.addQuery("user.active", true);
+        userRoleGR.addQuery("role", roleId);
+        userRoleGR.query();
+        var roleName;
+        while (userRoleGR.next()) {
+            if(!roleName){
+                roleName = userRoleGR.getDisplayValue("role");//for info msg
+            }
+            userIds.push(userRoleGR.getValue("user"));
+        }
+        var au = new global.ArrayUtil();
+        userIds = au.unique(userIds);
+       
+        var reportName;
+        userIds.forEach(function(userId) {
+            var reportPerm = new GlideRecord("sys_report_users_groups");
+            reportPerm.addQuery("report_id", reportId);
+            reportPerm.addQuery("user_id", userId);
+            reportPerm.query();
+            if (reportPerm.next()) {
+//                 gs.addInfoMessage(gs.getMessage("Report {0} is already shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+            } else {
+                reportPerm.newRecord();
+                reportPerm.setValue("report_id", reportId);
+                reportPerm.setValue("user_id", userId);
+                reportPerm.insert();
+//                 gs.addInfoMessage(gs.getMessage("Report {0} shared with user {1}", [reportPerm.getDisplayValue("report_id"), reportPerm.getDisplayValue("user_id")]));
+            }
+            if(!reportName){
+                reportName = reportPerm.getDisplayValue("report_id");
+            }
+        });
+        gs.addInfoMessage(gs.getMessage("Report {0} shared with {1} users who have the {2} role",[reportName, userIds.length + "", roleName]));
+    });
+});
+]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 15:58:52</sys_created_on>
+        <sys_id>fe29b5b9c375a610c0a0f22ed40131b9</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>syncDashboardPermission</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_fe29b5b9c375a610c0a0f22ed40131b9</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 15:58:52</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

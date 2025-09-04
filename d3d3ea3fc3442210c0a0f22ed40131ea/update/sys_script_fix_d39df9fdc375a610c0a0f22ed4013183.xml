@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>mainFindDuplicateUsers</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[//Find all duplicates
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------
+//Find duplicates
+var dupes = getDuplicateValues('sys_user', 'u_user_principal_name');
+gs.info(dupes);
+ 
+var userArr = [];
+
+for (var i = 0; i < dupes.length; i++) {
+    var duplicates = new GlideRecord('sys_user');
+    //duplicates.addEncodedQuery('u_user_principal_nameISNOTEMPTY^active=true');
+    //duplicates.addEncodedQuery('u_user_principal_nameISNOTEMPTY');
+    //duplicates.addQuery('u_user_principal_name', '0014853211@ICE.DHS.GOV');
+    duplicates.addEncodedQuery('u_user_principal_name='+dupes[i]);
+    duplicates.addQuery('sys_updated_by', 'ldap_user'); //double check username -------------------------------------
+    duplicates.addQuery('email', 'DOESNOTCONTAIN', '@associates');
+    duplicates.addActiveQuery();
+    //duplicates.setLimit(100);
+    duplicates.query();
+    while (duplicates.next()){
+      userArr.push(duplicates.sys_id+'');
+    }
+}
+ 
+gs.info(userArr.length);
+
+var allUsers = [];
+
+var user1 = new GlideRecord('sys_user');
+user1.addQuery('sys_id', 'IN', userArr);
+user1.query();
+ 
+while (user1.next()) {
+    var user2 = new GlideRecord('sys_user');
+    user2.addQuery('sys_id', "!=",  user1.sys_id);
+    user2.addQuery('u_user_principal_name', user1.u_user_principal_name);
+    user2.addQuery('sys_id', "IN", userArr);
+    user2.query();
+    while (user2.next()){
+        var returnedUsers = compareUser(user1.sys_id, user2.sys_id);
+        allUsers.push(returnedUsers);
+    }
+}
+ 
+
+//find records that exist in meployee table
+
+
+]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:18:27</sys_created_on>
+        <sys_id>d39df9fdc375a610c0a0f22ed4013183</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>mainFindDuplicateUsers</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_d39df9fdc375a610c0a0f22ed4013183</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:18:27</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="ecc_agent_script_file">
+    <ecc_agent_script_file action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <checksum/>
+        <description/>
+        <directory>false</directory>
+        <name>midServerAdminGroups</name>
+        <parent/>
+        <script>$groups = Get-LocalGroupMember Administrators&#13;
+$domain = Get-ADDomain | Select NetBIOSName&#13;
+&#13;
+$MemberList = $()&#13;
+$counter = 0&#13;
+&#13;
+ForEach ($group in $groups) {&#13;
+	&#13;
+	$member = ($group.Name).Replace("$($domain.NetBIOSName)\", '')&#13;
+&#13;
+	$MemberObject = New-Object PSObject&#13;
+&#13;
+	If ($group.ObjectClass -eq "Group" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+		&#13;
+		$members = Get-ADGroupMember -Identity $member -Server irmnet.ds2.dhs.gov &#13;
+		$userDetails = $members | Get-ADUser | Select DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName&#13;
+		&#13;
+		$counter++&#13;
+&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "DisplayName" -Value $userDetails.DisplayName&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "EmailAddress" -Value $userDetails.EmailAddress&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "GivenName" -Value $userDetails.GivenName&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "Surname" -Value $userDetails.Surname&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "SamAccountName" -Value $userDetails.SamAccountName&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "UserPrincipalName" -Value $userDetails.UserPrincipalName&#13;
+		$MemberObject | Add-Member -MemberType NoteProperty -Name "Group" -Value $group&#13;
+		$MemberList += $MemberObject&#13;
+&#13;
+	}}&#13;
+	&#13;
+	write-host $MemberList&#13;
+	$GroupMembers | Export-Csv "C:\Temp\groups.csv" -NoTypeInformation -Encoding "UTF8"&#13;
+&#13;
+	If ($group.ObjectClass -eq "User" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+		Get-ADUser -Identity $member -server irment.ds2.dhs.gov -Properties DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName | Export-CSV "C:\Temp\$env:hostname.csv" -Append&#13;
+	}&#13;
+&#13;
+}&#13;
+&#13;
+$csv | Export-Csv "C:\Temp\groups.csv" -NoTypeInformation -Encoding "UTF8"&#13;
+&#13;
+Get-ADGroupMember -Identity $member | GetADUser | Select DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName | Export-CSV "C:\Temp\$env:hostname.csv" -Append&#13;
+&#13;
+$GroupMembers += [PSCustomObject]@{'Group'=$group; 'DisplayName'=$userDetails.DisplayName; 'EmailAddress'=$userDetails.EmailAddress; 'GivenName'=$userDetails.GivenName; 'Surname'=$userDetails.Surname; 'SamAccountName'=$userDetails.SamAccountName; 'UserPrincipalName'=$userDetails.UserPrincipalName}&#13;
+		&#13;
+&#13;
+&#13;
+Get-ADGroupMember -Identity "ADEX Operations Admins" -Server irmnet.ds2.dhs.gov&#13;
+&#13;
+		&#13;
+&#13;
+		Get-ADUser -Properties GivenName, DisplayName, sAMAccountName | Export-Csv "C:\Temp\Groups.csv" -Append&#13;
+&#13;
+&#13;
+		$csv += New-Object -TypeName PSObject -Property $Groupmembers&#13;
+&#13;
+		New-Object PSObject -Property @{&#13;
+			DisplayName = $userDetails.DisplayName&#13;
+			EmailAddress = $userDetails.EmailAddress&#13;
+			GivenName = $userDetails.GivenName&#13;
+			Surname = $userDetails.Surname&#13;
+			SamAccountName = $userDetails.SamAccountName&#13;
+			UserPrincipalName = $userDetails.UserPrincipalName&#13;
+			Group = $group&#13;
+			}&#13;
+&#13;
+&#13;
+			$groups = Get-LocalGroupMember Administrators&#13;
+$domain = Get-ADDomain | Select NetBIOSName&#13;
+&#13;
+$MemberList = $()&#13;
+$counter = 0&#13;
+&#13;
+ForEach ($group in $groups) {&#13;
+	&#13;
+	$member = ($group.Name).Replace("$($domain.NetBIOSName)\", '')&#13;
+&#13;
+	$MemberObject = New-Object PSObject&#13;
+&#13;
+	If ($group.ObjectClass -eq "Group" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+		&#13;
+		$members = Get-ADGroupMember -Identity $member -Server irmnet.ds2.dhs.gov &#13;
+		$userDetails = $members | Get-ADUser | Select DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName&#13;
+&#13;
+		$MemberObject +=&#13;
+		&#13;
+		$counter++&#13;
+&#13;
+		&#13;
+&#13;
+&#13;
+	}}&#13;
+	&#13;
+	write-host $userDetails&#13;
+	$GroupMembers | Export-Csv "C:\Temp\groups.csv" -NoTypeInformation -Encoding "UTF8"&#13;
+&#13;
+	If ($group.ObjectClass -eq "User" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+		Get-ADUser -Identity $member -server irment.ds2.dhs.gov -Properties DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName | Export-CSV "C:\Temp\$env:hostname.csv" -Append&#13;
+	}&#13;
+&#13;
+}&#13;
+&#13;
+$csv | Export-Csv "C:\Temp\groups.csv" -NoTypeInformation -Encoding "UTF8"&#13;
+&#13;
+Get-ADGroupMember -Identity $member | GetADUser | Select DisplayName,EmailAddress,GivenName,Surname,SamAccountName,UserPrincipalName | Export-CSV "C:\Temp\$env:hostname.csv" -Append&#13;
+&#13;
+$GroupMembers += [PSCustomObject]@{'Group'=$group; 'DisplayName'=$userDetails.DisplayName; 'EmailAddress'=$userDetails.EmailAddress; 'GivenName'=$userDetails.GivenName; 'Surname'=$userDetails.Surname; 'SamAccountName'=$userDetails.SamAccountName; 'UserPrincipalName'=$userDetails.UserPrincipalName}&#13;
+		&#13;
+&#13;
+&#13;
+Get-ADGroupMember -Identity "ADEX Operations Admins" -Server irmnet.ds2.dhs.gov&#13;
+&#13;
+		&#13;
+&#13;
+		Get-ADUser -Properties GivenName, DisplayName, sAMAccountName | Export-Csv "C:\Temp\Groups.csv" -Append&#13;
+&#13;
+&#13;
+		$csv += New-Object -TypeName PSObject -Property $Groupmembers&#13;
+&#13;
+&#13;
+		New-Object PSObject -Property @{&#13;
+			DisplayName = $userDetails.DisplayName&#13;
+			EmailAddress = $userDetails.EmailAddress&#13;
+			GivenName = $userDetails.GivenName&#13;
+			Surname = $userDetails.Surname&#13;
+			SamAccountName = $userDetails.SamAccountName&#13;
+			UserPrincipalName = $userDetails.UserPrincipalName&#13;
+			Group = $group&#13;
+			}&#13;
+&#13;
+&#13;
+#From AJ&#13;
+$AdminList = @()&#13;
+$domain = Get-ADDomain | Select NetBIOSName&#13;
+			&#13;
+$Groups = Get-LocalGroupMember Administrators&#13;
+			&#13;
+foreach ($group in $Groups) {&#13;
+			&#13;
+	$ADName = ($group.Name).Replace("$($domain.NetBIOSName)\", '')&#13;
+					&#13;
+	#If ($group.ObjectClass -eq "Group" -And $group.PrincipalSource -eq "Active Directory") {&#13;
+		#Get-GroupMembers -GroupName $ADName&#13;
+	#} &#13;
+			&#13;
+	If ($group.ObjectClass -eq "User" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+		$user = Get-ADUser -Identity $ADName -Properties DisplayName, EmailAddress, SamAccountName&#13;
+		$AdminList += [PSCustomObject]@{&#13;
+			GroupName = "Administrators"&#13;
+			Name = $user.DisplayName&#13;
+			Email = $user.EmailAddress&#13;
+			AccountName = $user.SamAccountName&#13;
+		}&#13;
+	}&#13;
+			&#13;
+}&#13;
+			&#13;
+$hostname = $env:COMPUTERNAME&#13;
+$csvPath = "C:\Temp\$hostname.csv"&#13;
+$AdminList | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8&#13;
+			&#13;
+$AdminList = [PSCustomObject]@()&#13;
+			&#13;
+Get-GroupMembers -GroupName "Domain Admins"&#13;
+$hostname = $env:COMPUTERNAME&#13;
+$csvPath = "C:\Temp\$hostname.csv"&#13;
+$AdminList | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8&#13;
+			&#13;
+function Get-GroupMembers {&#13;
+	param (&#13;
+		[string]$GroupName&#13;
+	)&#13;
+	&#13;
+	$members = Get-ADGroupMember -Identity $GroupName&#13;
+			&#13;
+	$AdminList = foreach ($member in $members) {&#13;
+		$user = Get-ADUser -Identity $member.SamAccountName -Properties DisplayName,EmailAddress,SamAccountName&#13;
+				&#13;
+	}&#13;
+}&#13;
+			&#13;
+#********************* Updated AJ Script&#13;
+#&#13;
+&#13;
+$AdminList = @()&#13;
+$domain = Get-ADDomain | Select NetBIOSName&#13;
+&#13;
+$Groups = Get-LocalGroupMember Administrators&#13;
+&#13;
+foreach ($group in $Groups) {&#13;
+&#13;
+    $ADName = ($group.Name).Replace("$($domain.NetBIOSName)\", '')&#13;
+        &#13;
+    #If ($group.ObjectClass -eq "Group" -And $group.PrincipalSource -eq "Active Directory") {&#13;
+        #Get-GroupMembers -GroupName $ADName&#13;
+    #} &#13;
+&#13;
+    If ($group.ObjectClass -eq "User" -And $group.PrincipalSource -eq "ActiveDirectory") {&#13;
+        $user = Get-ADUser -Identity $ADName -Properties DisplayName, EmailAddress, SamAccountName&#13;
+        $AdminList += [PSCustomObject]@{&#13;
+            GroupName = "Administrators"&#13;
+            Name = $user.DisplayName&#13;
+            Email = $user.EmailAddress&#13;
+            AccountName = $user.SamAccountName&#13;
+        }&#13;
+    }&#13;
+&#13;
+}&#13;
+&#13;
+$hostname = $env:COMPUTERNAME&#13;
+$csvPath = "C:\Temp\$hostname.csv"&#13;
+$AdminList | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8&#13;
+&#13;
+$AdminList = [PSCustomObject]@()&#13;
+&#13;
+Get-GroupMembers -GroupName "Domain Admins"&#13;
+$hostname = $env:COMPUTERNAME&#13;
+$csvPath = "C:\Temp\$hostname.csv"&#13;
+$AdminList | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8&#13;
+&#13;
+Get-GroupMembers -GroupName "Domain Admins"&#13;
+&#13;
+function Get-GroupMembers {&#13;
+&#13;
+    param (&#13;
+        [string]$GroupName&#13;
+    )&#13;
+&#13;
+    Write-Host $GroupName&#13;
+&#13;
+    $members = Get-ADGroupMember -Identity $GroupName&#13;
+&#13;
+    Write-Host $members&#13;
+&#13;
+    $AdminList = foreach ($member in $members) {&#13;
+        Get-ADUser -Identity $member.SamAccountName -Properties DisplayName,EmailAddress,SamAccountName        &#13;
+    }&#13;
+&#13;
+    Write-Host $AdminList&#13;
+&#13;
+}&#13;
+&#13;
+</script>
+        <script_attachment/>
+        <source/>
+        <sys_class_name>ecc_agent_script_file</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:59:54</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>51278a35c3b5a610c0a0f22ed4013126</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>midServerAdminGroups</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>ecc_agent_script_file_51278a35c3b5a610c0a0f22ed4013126</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:59:54</sys_updated_on>
+        <use_attachment>false</use_attachment>
+        <version/>
+    </ecc_agent_script_file>
+</record_update>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>dupUsersCleanupScript</name>
+        <record_for_rollback>true</record_for_rollback>
+        <script><![CDATA[//Get List of Duplicate users
+function getDuplicateValues(table, field) {
+    var dupValues = [];
+    var ga = new GlideAggregate(table);
+    ga.addAggregate('COUNT', field);
+    ga.addNotNullQuery(field);
+    //ga.groupBy(field);
+    ga.addHaving('COUNT', '>', 1);
+    ga.setLimit(10);
+    ga.query();
+    while (ga.next()) {
+        dupValues.push(ga[field].toString());
+    }
+    return dupValues;
+}
+
+var dupes = getDuplicateValues('sys_user', 'u_objectsid');
+for (var i = 0; i < dupes.length; i++) {
+    var userArr = [];
+    var duplicates = new GlideRecord('sys_user');
+    duplicates.addEncodedQuery('u_objectsid=' + dupes[i]);
+    duplicates.orderBy('last_login_time');
+    duplicates.query();
+
+    while (duplicates.next()) {
+
+        var dupUsers = new GlideRecord('sys_user');
+        dupUsers.addQuery('u_objectsid', duplicates.u_objectsid);
+        //dupUsers.addQuery('sys_id',"!=",duplicates.sys_id);
+        dupUsers.query();
+
+        gs.info('name: ' + dupUsers.name);
+
+        if (dupUsers.getRowCount() > 1) {
+            var loginDate1 = duplicates.last_login_time;
+            var loginDate2 = dupUsers.last_login_time;
+
+            if (loginDate1 < loginDate2) {
+                gs.info("LoginDate1<LoginDate2 & LoginDate1: " + loginDate1 + " LoginDate2: " + loginDate2);
+            } else {
+                gs.info("LoginDate1>LoginDate2 & LoginDate1: " + loginDate1 + " LoginDate2: " + loginDate2);
+            }
+        }
+        userArr.push(duplicates.sys_id + '');
+
+        // var util = new ArrayUtil();
+        // var dupUsers = util.unique(userArr);
+
+        //var loginDate+[i] = duplicates.last_login_time; 
+    }
+
+}
+
+//Find all references to user accounts
+function findReferences() {
+
+    //var refTable = inputs.;
+    //gs.include("j2js");
+    //refTable = j2js(refTable).join();
+    //var refRecordID = inputs.;
+    var msg = [];
+
+    //Query dictionary table for reference, document_id, and condition fields
+    var dict = new GlideRecord('sys_dictionary');
+    dict.addQuery('reference', 'IN', refTable).addOrCondition('internal_type', 'document_id').addOrCondition('internal_type', 'conditions');
+    //Do not query audit and log fields
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'var__m_');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'ecc_');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'ha_');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'syslog');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_history');
+    dict.addQuery('name', 'DOES NOT CONTAIN', '_log');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'text_search');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'ts_');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_watermark');
+    dict.addQuery('name', 'DOES NOT CONTAIN', 'sys_audit');
+    dict.orderBy('name');
+    dict.orderBy('element');
+    dict.query();
+
+    while (dict.next()) {
+        var tblName = dict.name.toString();
+        // Skip tables used for Table Rotation
+        //var gr = new GlideRecord("sys_table_rotation_schedule");
+        // gr.addQuery("name.name", '!=', tblName);
+        //gr.addQuery("table_name", tblName);
+        // gr.query();
+
+        //if (!gr.hasNext()) {
+        var filterOperator = '=';
+        var refType = dict.internal_type;
+        if (refType == 'glide_list' || refType == 'conditions') {
+            filterOperator = 'LIKE';
+        }
+
+        //Query each table for matching records
+        var rec = new GlideRecord(tblName);
+        if (refType == 'glide_list' || refType == 'conditions') {
+            rec.addQuery(dict.element, 'CONTAINS', refRecordID);
+        } else {
+            rec.addQuery(dict.element, refRecordID);
+        }
+        rec.query();
+
+        //Add sys_id to array
+        while (rec.next()) {
+            msg.push(rec.sys_id);
+        }
+
+        //}
+    }
+    //Query for workflow variable values
+    tblName = 'sys_variable_value';
+    var vVal = new GlideRecord(tblName);
+    vVal.addQuery('value', 'CONTAINS', refRecordID);
+    vVal.query();
+
+    //Add sys_id to array
+    while (vVal.next()) {
+        msg.push(vVal.sys_id);
+    }
+}]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-05-29 16:15:37</sys_created_on>
+        <sys_id>b39cfdbdc375a610c0a0f22ed40131d3</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>dupUsersCleanupScript</sys_name>
+        <sys_package display_value="Plant Care" source="x_882786_plantcare">d3d3ea3fc3442210c0a0f22ed40131ea</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Plant Care">d3d3ea3fc3442210c0a0f22ed40131ea</sys_scope>
+        <sys_update_name>sys_script_fix_b39cfdbdc375a610c0a0f22ed40131d3</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-05-29 16:15:37</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>
